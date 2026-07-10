@@ -1,0 +1,436 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useProjects } from "../hooks/useProjects";
+import { useUser } from "../context/UserContext";
+import ProjectFormModal from "../components/ProjectFormModal";
+import { relativeTime } from "../lib/format";
+
+const ICON_COLORS = {
+  layers: { text: "text-primary", bg: "bg-primary/10" },
+  api: { text: "text-secondary", bg: "bg-secondary/10" },
+  terminal: { text: "text-on-surface-variant", bg: "bg-surface-variant" },
+  auto_awesome: { text: "text-primary", bg: "bg-primary/10" },
+  database: { text: "text-secondary", bg: "bg-secondary/10" },
+  rocket_launch: { text: "text-tertiary", bg: "bg-tertiary/10" },
+  bolt: { text: "text-primary", bg: "bg-primary/10" },
+};
+
+function iconColors(icon) {
+  return ICON_COLORS[icon] || ICON_COLORS.layers;
+}
+
+export default function Home() {
+  const navigate = useNavigate();
+  const user = useUser();
+  const {
+    pinnedProjects,
+    recentProjects,
+    loading,
+    error,
+    searchTerm,
+    setSearchTerm,
+    createProject,
+    updateProject,
+    deleteProject,
+    togglePin,
+    refetch,
+  } = useProjects();
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
+
+  function openCreateModal() {
+    setEditingProject(null);
+    setModalOpen(true);
+  }
+
+  function openEditModal(e, project) {
+    e.stopPropagation();
+    setEditingProject(project);
+    setModalOpen(true);
+  }
+
+  async function handleDelete(e, project) {
+    e.stopPropagation();
+    if (!window.confirm(`Delete "${project.name}"? This can't be undone.`)) return;
+    try {
+      await deleteProject(project.$id);
+    } catch (err) {
+      alert(err.message || "Failed to delete project.");
+    }
+  }
+
+  function handlePinToggle(e, project) {
+    e.stopPropagation();
+    togglePin(project.$id).catch((err) => alert(err.message || "Failed to update pin."));
+  }
+
+  return (
+    <>
+      {modalOpen && (
+        <ProjectFormModal
+          initial={editingProject}
+          submitLabel={editingProject ? "Save Changes" : "Create Project"}
+          onClose={() => setModalOpen(false)}
+          onSubmit={(data) => (editingProject ? updateProject(editingProject.$id, data) : createProject(data))}
+        />
+      )}
+{/* Sidebar Navigation Shell */}
+<aside className="bg-surface-container-low dark:bg-surface-container-low w-sidebar-width h-screen fixed left-0 top-0 border-r border-outline-variant/10 flex flex-col h-full py-6 px-4 z-50" id="sidebar">
+<div className="mb-10 px-2 flex items-center gap-3">
+<div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
+<span className="material-symbols-outlined text-on-primary text-[20px]" style={{fontVariationSettings: "'FILL' 1"}}>terminal</span>
+</div>
+<div>
+<h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary leading-tight">DevRoom OS</h1>
+<p className="text-[11px] uppercase tracking-widest text-on-surface-variant font-medium">Engineering Workspace</p>
+</div>
+</div>
+<nav className="flex-1 space-y-1">
+{/* Active Tab: Custom logic (Home/Dashboard usually maps to generic but here we map Workspace/Projects) */}
+<div className="bg-surface-container-highest text-primary font-medium rounded-lg cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
+<span className="material-symbols-outlined" data-icon="chat">chat</span>
+<span className="font-body-sm text-body-sm">Chat</span>
+</div>
+<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
+<span className="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span className="font-body-sm text-body-sm">AI Assistant</span>
+</div>
+<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
+<span className="material-symbols-outlined" data-icon="description">description</span>
+<span className="font-body-sm text-body-sm">Docs</span>
+</div>
+<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
+<span className="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+<span className="font-body-sm text-body-sm">Resources</span>
+</div>
+<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
+<span className="material-symbols-outlined" data-icon="send">send</span>
+<span className="font-body-sm text-body-sm">Submissions</span>
+</div>
+</nav>
+<div className="mt-auto space-y-1">
+<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
+<span className="material-symbols-outlined" data-icon="settings">settings</span>
+<span className="font-body-sm text-body-sm">Settings</span>
+</div>
+<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
+<span className="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span className="font-body-sm text-body-sm">Notifications</span>
+</div>
+<div className="pt-6 border-t border-outline-variant/10 mt-4 flex items-center gap-3 px-2">
+<div className="w-8 h-8 rounded-full overflow-hidden bg-surface-variant">
+<img className="w-full h-full object-cover" data-alt="A professional headshot of a developer in a high-tech studio with soft cyan backlighting. The aesthetic is clean and modern, focusing on technical proficiency and a calm workspace atmosphere. Minimalist dark clothing and sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTHLdCi81Y3kmL94me3c3twAskb4fS9P7F34JJlwbdkLOXfP7z31MqDu-lStyqpeLKCEORhiLdwx_lYECbUM90ARhqFdIyBttDXyYYAa-JQ96eMrSCS-XefShdCd9PDtCls-sElF7emeKP0aFBmv7T1F2RJBeMd4Sgf5AGx2TXCW6x5TiE7UoorC31uwmzP79kjyxxb9HWSFdmN5k7hPQ5jFx2II5R_ExxGbT_Jj_QkzW5hyVkmKI3W_lVJjmcPhtcM_6BtTQOKNs"/>
+</div>
+<div className="flex-1 min-w-0">
+<p className="text-sm font-medium truncate">{user.name}</p>
+<p className="text-[10px] text-on-surface-variant uppercase tracking-tighter">Pro Tier</p>
+</div>
+</div>
+</div>
+</aside>
+{/* Main Content Area */}
+<main className="ml-sidebar-width min-h-screen relative flex flex-col">
+{/* Top Navigation */}
+<header className="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 flex justify-between items-center h-16 px-gutter sticky top-0 z-40">
+<div className="flex items-center gap-6">
+<div className="flex items-center gap-2">
+<span className="text-primary font-bold font-label-caps text-label-caps tracking-[0.1em]">PROJECT ALPHA</span>
+<span className="text-outline-variant text-xs">/</span>
+<span className="text-on-surface-variant font-label-caps text-label-caps">SPRINT 4</span>
+</div>
+</div>
+{/* Command Palette Style Search */}
+<div className="absolute left-1/2 -translate-x-1/2 w-full max-w-lg hidden md:block">
+<div className="glass h-10 rounded-lg flex items-center px-4 gap-3 hover:border-primary/30 transition-all primary-glow">
+<span className="material-symbols-outlined text-outline text-[20px]" data-icon="search">search</span>
+<input
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+  placeholder="Search projects..."
+  className="bg-transparent border-none focus:outline-none text-on-surface font-body-sm text-body-sm flex-1 placeholder:text-on-surface-variant"
+/>
+{searchTerm && (
+  <button onClick={() => setSearchTerm("")} className="text-on-surface-variant hover:text-on-surface">
+    <span className="material-symbols-outlined text-[16px]">close</span>
+  </button>
+)}
+</div>
+</div>
+<div className="flex items-center gap-4">
+<button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all cursor-pointer" data-icon="account_tree">account_tree</button>
+<button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all cursor-pointer" data-icon="cloud_done">cloud_done</button>
+<div className="h-6 w-[1px] bg-outline-variant/30 mx-1"></div>
+<button
+  onClick={openCreateModal}
+  className="bg-primary text-on-primary px-4 py-1.5 rounded font-label-caps text-[11px] font-bold active:scale-95 duration-200"
+>
+                    NEW PROJECT
+                </button>
+</div>
+</header>
+{/* Page Canvas */}
+<div className="p-gutter flex-1 max-w-[1440px] mx-auto w-full">
+{/* Hero / Continue Section */}
+<section className="mb-12">
+<div className="flex items-end justify-between mb-6">
+<div>
+<h2 className="font-headline-lg text-headline-lg text-white mb-2">Welcome back, {user.name.split(" ")[0]}.</h2>
+<p className="text-on-surface-variant font-body-lg text-body-lg">Here's what happened while you were away.</p>
+</div>
+</div>
+<div className="relative group cursor-pointer">
+<div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
+<div className="relative glass rounded-xl overflow-hidden p-8 flex flex-col md:flex-row items-center gap-8 border-primary/10">
+<div className="w-full md:w-1/3 aspect-video rounded-lg overflow-hidden bg-surface-container shadow-2xl relative">
+<img className="w-full h-full object-cover" data-alt="A macro shot of complex source code displayed on a sleek, high-resolution monitor. The text is vibrant with syntax highlighting in cyans and purples. Soft bokeh of a dark workstation environment in the background with a futuristic glow from the screen." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBM3Xyx4PFZksauZbw_GaBM_O-bdG4k-juwUSZGwPDpaXKVZh-cu9DViK8HeyjVUHnMxaJjjFjWCKhH-P9wNA_hmnOvWpUuwQRosHcud27E04hMZb2PRcFcq3U7T1nXoJ8OHi3ySAbtbsp3r2x723NW6DwZchbE8KOZ5eeNBjGTYc8DwNMtfT9AvZnmEgP7xuBtYE1Wr-wT0Wv99pTQS7ska5nAK3h-IxC42ueFU_fjIK-yek_rLShOWtpqlXePuWQkaoz2J0F3oyY"/>
+<div className="absolute inset-0 bg-gradient-to-t from-surface/80 to-transparent"></div>
+<div className="absolute bottom-4 left-4 flex items-center gap-2">
+<span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span className="text-[10px] font-bold text-primary uppercase tracking-widest">Active Now</span>
+</div>
+</div>
+<div className="flex-1">
+<div className="flex items-center gap-2 text-primary mb-2">
+<span className="material-symbols-outlined text-sm" data-icon="history">history</span>
+<span className="font-label-caps text-[11px] tracking-widest font-bold">CONTINUE WORKING</span>
+</div>
+<h3 className="font-headline-md text-headline-md text-white mb-3">DevRoom OS Design System</h3>
+<p className="text-on-surface-variant font-body-sm text-body-sm mb-6 max-w-xl">Modified 12 minutes ago in <span className="text-on-surface">Main Framework Architecture</span>. You were last refining the component elevation logic and tonal layering tokens.</p>
+<div className="flex items-center gap-4">
+<button className="bg-primary text-on-primary px-6 py-2.5 rounded font-bold text-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all">
+                                    Resume Session
+                                    <span className="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button className="text-on-surface font-medium text-sm hover:text-primary px-4 py-2 transition-colors">
+                                    View Commits
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+{/* Bento Grid Section */}
+<div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+{/* Pinned Projects (Left) */}
+<div className="md:col-span-4 space-y-gutter">
+<div className="flex items-center justify-between">
+<h4 className="font-headline-md text-headline-md text-white">Pinned</h4>
+<button className="text-on-surface-variant hover:text-primary transition-colors">
+<span className="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+<div className="space-y-4">
+{loading && (
+  <>
+    <div className="glass p-4 rounded-xl h-[72px] animate-pulse" />
+    <div className="glass p-4 rounded-xl h-[72px] animate-pulse" />
+  </>
+)}
+{!loading &&
+  pinnedProjects.map((project) => {
+    const colors = iconColors(project.icon);
+    return (
+      <div
+        key={project.$id}
+        onClick={() => navigate(`/project/${project.$id}`)}
+        className="glass glass-hover p-4 rounded-xl flex items-center gap-4 transition-all group cursor-pointer"
+      >
+        <div className={`w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center ${colors.text} border border-outline-variant/20 group-hover:border-primary/50 transition-colors`}>
+          <span className="material-symbols-outlined text-[28px]">{project.icon || "layers"}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm truncate">{project.name}</p>
+          <p className="text-xs text-on-surface-variant truncate">{relativeTime(project.$updatedAt)}</p>
+        </div>
+        <span
+          onClick={(e) => handlePinToggle(e, project)}
+          className="material-symbols-outlined text-primary text-[20px] hover:scale-110 transition-transform"
+          style={{ fontVariationSettings: "'FILL' 1" }}
+        >
+          push_pin
+        </span>
+      </div>
+    );
+  })}
+{!loading && pinnedProjects.length === 0 && (
+  <div className="glass p-4 rounded-xl flex items-center gap-4 border-dashed border-outline-variant/30">
+    <div className="w-12 h-12 rounded-lg flex items-center justify-center text-outline-variant">
+      <span className="material-symbols-outlined text-[28px]">push_pin</span>
+    </div>
+    <div className="flex-1">
+      <p className="text-sm font-medium text-outline-variant">No pinned projects yet</p>
+      <p className="text-xs text-on-surface-variant">Pin one from Recent Projects</p>
+    </div>
+  </div>
+)}</div>
+</div>
+{/* Recent Projects Grid (Right) */}
+<div className="md:col-span-8 space-y-gutter">
+<div className="flex items-center justify-between">
+<h4 className="font-headline-md text-headline-md text-white">Recent Projects</h4>
+<div className="flex items-center gap-2">
+<div className="flex bg-surface-container-low rounded-lg p-1 border border-outline-variant/10">
+<button className="p-1.5 rounded bg-surface-variant text-primary">
+<span className="material-symbols-outlined text-[18px]" data-icon="grid_view">grid_view</span>
+</button>
+<button className="p-1.5 rounded text-on-surface-variant hover:text-on-surface">
+<span className="material-symbols-outlined text-[18px]" data-icon="list">list</span>
+</button>
+</div>
+</div>
+</div>
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+{loading &&
+  Array.from({ length: 4 }).map((_, i) => (
+    <div key={i} className="glass rounded-xl p-6 h-[200px] animate-pulse" />
+  ))}
+
+{!loading && error && (
+  <div className="sm:col-span-2 glass rounded-xl p-8 text-center border-error/30">
+    <p className="text-error font-medium mb-1">Couldn't load projects</p>
+    <p className="text-xs text-on-surface-variant mb-4">{error}</p>
+    <button onClick={refetch} className="text-primary text-sm font-bold hover:underline">
+      Try again
+    </button>
+  </div>
+)}
+
+{!loading && !error && recentProjects.length === 0 && pinnedProjects.length === 0 && (
+  <div className="sm:col-span-2 glass rounded-xl p-10 text-center">
+    <p className="text-white font-medium mb-1">No projects yet</p>
+    <p className="text-xs text-on-surface-variant mb-4">Create your first workspace to get started.</p>
+    <button
+      onClick={openCreateModal}
+      className="bg-primary text-on-primary px-5 py-2 rounded font-bold text-sm hover:brightness-110 active:scale-95 transition-all"
+    >
+      Create Project
+    </button>
+  </div>
+)}
+
+{!loading &&
+  !error &&
+  recentProjects.map((project) => {
+    const colors = iconColors(project.icon);
+    return (
+      <div
+        key={project.$id}
+        onClick={() => navigate(`/project/${project.$id}`)}
+        className="glass glass-hover rounded-xl p-6 transition-all group flex flex-col h-[200px] cursor-pointer relative"
+      >
+        <div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => handlePinToggle(e, project)}
+            className="w-7 h-7 rounded-lg bg-surface-container-highest/80 flex items-center justify-center text-on-surface-variant hover:text-primary"
+            title="Pin"
+          >
+            <span className="material-symbols-outlined text-[16px]">push_pin</span>
+          </button>
+          <button
+            onClick={(e) => openEditModal(e, project)}
+            className="w-7 h-7 rounded-lg bg-surface-container-highest/80 flex items-center justify-center text-on-surface-variant hover:text-primary"
+            title="Edit"
+          >
+            <span className="material-symbols-outlined text-[16px]">edit</span>
+          </button>
+          <button
+            onClick={(e) => handleDelete(e, project)}
+            className="w-7 h-7 rounded-lg bg-surface-container-highest/80 flex items-center justify-center text-on-surface-variant hover:text-error"
+            title="Delete"
+          >
+            <span className="material-symbols-outlined text-[16px]">delete</span>
+          </button>
+        </div>
+        <div className="flex justify-between items-start mb-auto">
+          <div className={`w-12 h-12 rounded-xl ${colors.bg} flex items-center justify-center ${colors.text}`}>
+            <span className="material-symbols-outlined text-[32px]">{project.icon || "layers"}</span>
+          </div>
+        </div>
+        <div>
+          <h5 className="font-bold text-lg text-white mb-1 truncate">{project.name}</h5>
+          {project.description && (
+            <p className="text-xs text-on-surface-variant truncate mb-1">{project.description}</p>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-on-surface-variant">{relativeTime(project.$updatedAt)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+
+{!loading && !error && (recentProjects.length > 0 || pinnedProjects.length > 0) && (
+  <div
+    onClick={openCreateModal}
+    className="glass glass-hover rounded-xl p-6 transition-all group flex flex-col h-[200px] border-dashed border-outline-variant/30 items-center justify-center text-center cursor-pointer"
+  >
+    <div className="w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+      <span className="material-symbols-outlined text-[32px]">add_circle</span>
+    </div>
+    <h5 className="font-bold text-lg text-white">Create New Project</h5>
+    <p className="text-xs text-on-surface-variant px-4">Start a blank workspace</p>
+  </div>
+)}
+</div>
+</div>
+</div>
+{/* Dashboard Stats / Bottom Section */}
+<section className="mt-gutter grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div className="glass p-6 rounded-xl flex items-center gap-4">
+<div className="p-3 rounded-lg bg-primary/10 text-primary">
+<span className="material-symbols-outlined" data-icon="bolt">bolt</span>
+</div>
+<div>
+<p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">System Performance</p>
+<p className="text-xl font-bold">99.2% <span className="text-xs text-primary font-normal">Optimal</span></p>
+</div>
+</div>
+<div className="glass p-6 rounded-xl flex items-center gap-4">
+<div className="p-3 rounded-lg bg-secondary/10 text-secondary">
+<span className="material-symbols-outlined" data-icon="schedule">schedule</span>
+</div>
+<div>
+<p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Build Time</p>
+<p className="text-xl font-bold">14s <span className="text-xs text-secondary font-normal">-2s avg</span></p>
+</div>
+</div>
+<div className="glass p-6 rounded-xl flex items-center gap-4">
+<div className="p-3 rounded-lg bg-on-tertiary-container/10 text-tertiary">
+<span className="material-symbols-outlined" data-icon="bug_report">bug_report</span>
+</div>
+<div>
+<p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Active Issues</p>
+<p className="text-xl font-bold">0 <span className="text-xs text-on-surface-variant font-normal">Clean slate</span></p>
+</div>
+</div>
+</section>
+</div>
+{/* Footer / System Bar */}
+<footer className="mt-auto h-12 border-t border-outline-variant/10 px-gutter flex items-center justify-between text-[11px] font-medium text-on-surface-variant uppercase tracking-widest">
+<div className="flex items-center gap-6">
+<div className="flex items-center gap-2">
+<span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Ready</span>
+</div>
+<span>Uptime: 24:08:12</span>
+</div>
+<div className="flex items-center gap-6">
+<span>Branch: main</span>
+<span className="flex items-center gap-1">
+<span className="material-symbols-outlined text-[14px]" data-icon="cloud">cloud</span>
+                    Europe West 1
+                </span>
+</div>
+</footer>
+</main>
+{/* FAB Action (Suppressed on Home according to shell rules, but including for context if intended as global action) */}
+<div className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all z-50 group" id="command-trigger">
+<span className="material-symbols-outlined text-[28px]" data-icon="terminal" style={{fontVariationSettings: "'FILL' 1"}}>terminal</span>
+<div className="absolute right-full mr-4 bg-surface-container-high border border-outline-variant/20 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+<span className="font-label-caps text-[10px] font-bold text-white">Open Terminal (⌘ + `)</span>
+</div>
+</div>
+    </>
+  );
+}

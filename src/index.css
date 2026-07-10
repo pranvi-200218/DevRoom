@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Shared base (identical across all 6 source mockups) ---------- */
+body {
+  background-color: #111319;
+  color: #e2e2eb;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* App-wide scrollbar. Source mockups disagreed slightly on width/color
+   (Home used 6px, most workspace pages used 4px) — standardized on the
+   4px/rgba style since it was the majority pattern across pages. */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+/* kept as an explicit opt-in class too, since some pages reference it directly */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ---------- Home page (glass / glass-hover / primary-glow) ---------- */
+.glass {
+  background: rgba(35, 39, 51, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px 0 rgba(47, 217, 244, 0.1);
+}
+.primary-glow {
+  box-shadow: 0 0 20px 0 rgba(47, 217, 244, 0.1);
+}
+.primary-glow-focus:focus-within {
+  box-shadow: 0 0 20px 0 rgba(47, 217, 244, 0.1);
+}
+
+/* ---------- Per-page "glass-panel" variants (renamed to avoid collisions —
+   each source page defined this class with a different rgba value) ---------- */
+.glass-panel-chat {
+  background: rgba(17, 19, 25, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.glass-panel-ai {
+  background: rgba(26, 29, 36, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.glass-panel-vault {
+  background: rgba(26, 29, 36, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.glass-panel-dash {
+  background: rgba(35, 39, 51, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-panel-members {
+  background: rgba(35, 39, 51, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- Team Chat ---------- */
+.message-gradient {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* ---------- AI Workspace ---------- */
+.code-glow {
+  box-shadow: 0 0 20px rgba(138, 235, 255, 0.05);
+}
+.active-tab-indicator {
+  position: absolute;
+  left: 0;
+  width: 2px;
+  height: 16px;
+  background-color: #8aebff;
+  border-radius: 0 2px 2px 0;
+}
+
+/* ---------- Resource Vault ---------- */
+.file-card {
+  background-color: #232733;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.file-card:hover {
+  border-color: rgba(138, 235, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+.recent-glow {
+  position: relative;
+}
+.recent-glow::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: inherit;
+  border: 1px solid #8aebff;
+  opacity: 0.4;
+  pointer-events: none;
+  box-shadow: 0 0 15px rgba(138, 235, 255, 0.15);
+}
+
+/* ---------- Member Management ---------- */
+.sidebar-item-active-members {
+  position: relative;
+}
+.sidebar-item-active-members::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 2px;
+  background-color: #2fd9f4;
+}
