@@ -73,6 +73,21 @@ export default function MemberManagement() {
       alert(err.message || "Failed to remove member.");
     }
   }
+
+  function handleExportCsv() {
+    const rows = [["Name", "Email", "Role", "Status"]];
+    activeMembers.forEach((m) => rows.push([m.name || "", m.email || "", m.role || "", m.status || ""]));
+    const csv = rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(project?.name || "project").replace(/\s+/g, "-").toLowerCase()}-members.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
   return (
     <>
     {/* SideNavBar */}
@@ -86,23 +101,23 @@ export default function MemberManagement() {
                 <span className="material-symbols-outlined text-[20px]">home</span>
                 <span className="font-body-sm">Home</span>
             </a>
-            <a className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-on-surface-variant hover:bg-white/5 hover:text-on-surface" href="#">
+            <a onClick={(e) => { e.preventDefault(); navigate("/"); }} className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-on-surface-variant hover:bg-white/5 hover:text-on-surface" href="#">
                 <span className="material-symbols-outlined text-[20px]">account_tree</span>
                 <span className="font-body-sm">Projects</span>
             </a>
-            <a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-container-high text-primary font-medium sidebar-item-active-members" href="#">
+            <a onClick={(e) => { e.preventDefault(); navigate(`/project/${projectId}/settings`); }} className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-on-surface-variant hover:bg-white/5 hover:text-on-surface" href="#">
                 <span className="material-symbols-outlined text-[20px]">settings</span>
                 <span className="font-body-sm">Settings</span>
             </a>
         </nav>
         <div className="mt-auto pt-4 border-t border-white/5">
-            <button className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-on-primary rounded-lg font-medium active:scale-95 transition-all duration-100">
+            <button onClick={() => navigate("/")} className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-on-primary rounded-lg font-medium active:scale-95 transition-all duration-100">
 <span className="material-symbols-outlined text-[18px]">add</span>
 <span>New Project</span>
 </button>
             <div className="mt-6 flex items-center gap-3 px-2">
-                <img className="w-8 h-8 rounded-full border border-white/10 object-cover" data-alt="A close-up portrait of a professional developer with a friendly expression, captured in soft, cinematic lighting against a dark studio background. The style is modern and high-resolution, featuring subtle hints of digital technology in the background bokeh."
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6ELQo0rLZZZQPTcUCWxZb2yLkiwMsLPDnm_YPns5aqnEGB49cZH_KSc1HDQkRG-8-yUJsj6X16f56cpD-fpb0fIUaxJMDZiLcvoA2JnpnEt9iy6oyObfVxRDqnWFvJbWXq1eKQ7TlNYsGMmD7x1EkHXa1OsHbyAHwq88giomnd_1TCNE-B_3KG5ms_B_RyyIJ1Lj4oXFxi-e_OnrIy3NQ_lTTkJzLXgT1bSdtAFQVuzRHv2J3UTQYZaIipWtGB6zXQaZqXMXNs4Q"
+                <img className="w-8 h-8 rounded-full border border-white/10 object-cover" alt={currentUser.name}
+                    src={currentUser.avatarUrl}
                 />
                 <div className="overflow-hidden">
                     <p className="text-body-sm font-medium truncate">{currentUser.name}</p>
@@ -123,7 +138,7 @@ export default function MemberManagement() {
             </div>
         </div>
         <div className="flex items-center gap-4">
-            <button className="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+            <button className="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" title="Notifications aren't built yet">
 <span className="material-symbols-outlined">notifications</span>
 </button>
             <div className="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 flex items-center justify-center overflow-hidden">
@@ -214,7 +229,7 @@ export default function MemberManagement() {
                     <div className="glass-panel-members rounded-xl overflow-hidden shadow-2xl">
                         <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
                             <h3 className="font-semibold text-on-surface">Active Members</h3>
-                            <button className="text-label-caps text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+                            <button onClick={handleExportCsv} disabled={activeMembers.length === 0} className="text-label-caps text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
 <span className="material-symbols-outlined text-[16px]">download</span>
                                 Export List
                             </button>
@@ -274,8 +289,8 @@ export default function MemberManagement() {
                         <div className="px-6 py-4 bg-white/5 border-t border-white/5 flex justify-between items-center text-[12px] text-on-surface-variant">
                             <span>Showing {activeMembers.length} of {activeMembers.length} members</span>
                             <div className="flex gap-2">
-                                <button className="px-3 py-1 rounded border border-white/10 hover:bg-white/10 transition-colors disabled:opacity-50" disabled="">Previous</button>
-                                <button className="px-3 py-1 rounded border border-white/10 hover:bg-white/10 transition-colors">Next</button>
+                                <button className="px-3 py-1 rounded border border-white/10 transition-colors opacity-40 cursor-not-allowed" disabled title="Pagination isn't built yet — this shows everyone">Previous</button>
+                                <button className="px-3 py-1 rounded border border-white/10 transition-colors opacity-40 cursor-not-allowed" disabled title="Pagination isn't built yet — this shows everyone">Next</button>
                             </div>
                         </div>
                     </div>

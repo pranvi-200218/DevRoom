@@ -42,11 +42,11 @@ export default function ProjectDashboard() {
                 <span className="material-symbols-outlined" data-icon="home">home</span>
                 <span className="font-body-sm text-body-sm">Home</span>
             </a>
-            <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 duration-100" href="#">
+            <a onClick={() => navigate("/")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 duration-100 cursor-pointer">
                 <span className="material-symbols-outlined" data-icon="account_tree">account_tree</span>
                 <span className="font-body-sm text-body-sm">Projects</span>
             </a>
-            <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 duration-100" href="#">
+            <a onClick={() => navigate(`/project/${projectId}/settings`)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 duration-100 cursor-pointer">
                 <span className="material-symbols-outlined" data-icon="settings">settings</span>
                 <span className="font-body-sm text-body-sm">Settings</span>
             </a>
@@ -67,8 +67,7 @@ export default function ProjectDashboard() {
         </div>
         <div className="flex items-center gap-4">
             <button className="text-on-surface-variant hover:text-primary transition-colors relative">
-<span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-<span className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full border-2 border-surface"></span>
+<span className="material-symbols-outlined text-on-surface-variant" title="Notifications aren't built yet">notifications</span>
 </button>
             <div className="h-8 w-8 rounded-full overflow-hidden border border-white/10">
                 <img className="w-full h-full object-cover" data-alt="A professional studio headshot of a software engineer with short hair, wearing a minimalist black turtleneck, set against a dark moody architectural background with cyan accent lighting and deep shadows."
@@ -105,7 +104,7 @@ export default function ProjectDashboard() {
                         <img className="w-full h-full object-cover" data-alt="Detailed close-up of a person's hands typing on a mechanical keyboard with RGB lighting set to a deep electric blue, blurred technical documentation in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6RmthBrZW5M4xXPLrF-u3Ntime9QtXS6PkybvppRRmR8QdzQ9uC_rHpm1Nov2JN6-GTnc-7I9jJlfdbSHHbLdIn8VeBBaYJ3OZ2QGHeOG39grsvPAMpMHfk-1MinR4dnZgtpR33m-WKDu4UiwtxomL_suo_egpBk8MAk9cjzVBoyTSkY3l2NEFEKEANyQ-3okFa4Xwt89jby1R_EWIChV3OcKgfHca3sE0YFeNq4fsIpsNkdz-l5sftrTMnSx9a1SrsROq9I98CM"
                         />
                     </div>
-                    <button className="w-10 h-10 rounded-full border-2 border-dashed border-white/20 bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:border-primary hover:text-primary transition-all active:scale-90">
+                    <button onClick={() => navigate(`/project/${projectId}/members`)} className="w-10 h-10 rounded-full border-2 border-dashed border-white/20 bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:border-primary hover:text-primary transition-all active:scale-90" title="Manage members">
 <span className="material-symbols-outlined" data-icon="add">add</span>
 </button>
                 </div>
@@ -139,7 +138,6 @@ export default function ProjectDashboard() {
                     <div>
                         <p className="text-white font-medium text-body-lg">MVP Alpha Launch</p>
                         <p className="text-on-surface-variant font-body-sm mt-1">Scheduled for Friday, Oct 24</p>
-                        <button className="mt-6 w-full py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-colors text-label-caps font-label-caps">View Roadmap</button>
                     </div>
                 </div>
             </section>
@@ -272,11 +270,6 @@ export default function ProjectDashboard() {
                         <p className="text-[12px] text-on-surface-variant mt-1">Yesterday • DevOps</p>
                     </div>
                 </div>
-            </div>
-            <div className="p-6 mt-auto">
-                <button className="w-full py-2 bg-white/5 border border-white/5 rounded-lg text-label-caps font-label-caps hover:bg-white/10 transition-colors">
-                    View Full Audit Log
-                </button>
             </div>
         </aside>
     </main>

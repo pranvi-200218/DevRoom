@@ -23,6 +23,8 @@ export default function Home() {
   const navigate = useNavigate();
   const user = useUser();
   const {
+    projects,
+    allProjects,
     pinnedProjects,
     recentProjects,
     loading,
@@ -36,8 +38,11 @@ export default function Home() {
     refetch,
   } = useProjects();
 
+  const mostRecentProject = allProjects[0] || null;
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
+  const [viewMode, setViewMode] = useState("grid");
 
   function openCreateModal() {
     setEditingProject(null);
@@ -158,8 +163,8 @@ export default function Home() {
 </div>
 </div>
 <div className="flex items-center gap-4">
-<button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all cursor-pointer" data-icon="account_tree">account_tree</button>
-<button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all cursor-pointer" data-icon="cloud_done">cloud_done</button>
+<span className="material-symbols-outlined text-outline-variant/50" title="Workspace">account_tree</span>
+<span className="material-symbols-outlined text-primary/60" title="All changes saved">cloud_done</span>
 <div className="h-6 w-[1px] bg-outline-variant/30 mx-1"></div>
 <button
   onClick={openCreateModal}
@@ -176,39 +181,46 @@ export default function Home() {
 <div className="flex items-end justify-between mb-6">
 <div>
 <h2 className="font-headline-lg text-headline-lg text-white mb-2">Welcome back, {user.name.split(" ")[0]}.</h2>
-<p className="text-on-surface-variant font-body-lg text-body-lg">Here's what happened while you were away.</p>
+<p className="text-on-surface-variant font-body-lg text-body-lg">
+  {mostRecentProject ? "Here's what happened while you were away." : "Create your first project to get started."}
+</p>
 </div>
 </div>
-<div className="relative group cursor-pointer">
-<div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
-<div className="relative glass rounded-xl overflow-hidden p-8 flex flex-col md:flex-row items-center gap-8 border-primary/10">
-<div className="w-full md:w-1/3 aspect-video rounded-lg overflow-hidden bg-surface-container shadow-2xl relative">
-<img className="w-full h-full object-cover" data-alt="A macro shot of complex source code displayed on a sleek, high-resolution monitor. The text is vibrant with syntax highlighting in cyans and purples. Soft bokeh of a dark workstation environment in the background with a futuristic glow from the screen." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBM3Xyx4PFZksauZbw_GaBM_O-bdG4k-juwUSZGwPDpaXKVZh-cu9DViK8HeyjVUHnMxaJjjFjWCKhH-P9wNA_hmnOvWpUuwQRosHcud27E04hMZb2PRcFcq3U7T1nXoJ8OHi3ySAbtbsp3r2x723NW6DwZchbE8KOZ5eeNBjGTYc8DwNMtfT9AvZnmEgP7xuBtYE1Wr-wT0Wv99pTQS7ska5nAK3h-IxC42ueFU_fjIK-yek_rLShOWtpqlXePuWQkaoz2J0F3oyY"/>
-<div className="absolute inset-0 bg-gradient-to-t from-surface/80 to-transparent"></div>
-<div className="absolute bottom-4 left-4 flex items-center gap-2">
-<span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-<span className="text-[10px] font-bold text-primary uppercase tracking-widest">Active Now</span>
-</div>
-</div>
-<div className="flex-1">
-<div className="flex items-center gap-2 text-primary mb-2">
-<span className="material-symbols-outlined text-sm" data-icon="history">history</span>
-<span className="font-label-caps text-[11px] tracking-widest font-bold">CONTINUE WORKING</span>
-</div>
-<h3 className="font-headline-md text-headline-md text-white mb-3">DevRoom OS Design System</h3>
-<p className="text-on-surface-variant font-body-sm text-body-sm mb-6 max-w-xl">Modified 12 minutes ago in <span className="text-on-surface">Main Framework Architecture</span>. You were last refining the component elevation logic and tonal layering tokens.</p>
-<div className="flex items-center gap-4">
-<button className="bg-primary text-on-primary px-6 py-2.5 rounded font-bold text-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all">
-                                    Resume Session
-                                    <span className="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
-</button>
-<button className="text-on-surface font-medium text-sm hover:text-primary px-4 py-2 transition-colors">
-                                    View Commits
-                                </button>
-</div>
-</div>
-</div>
-</div>
+{mostRecentProject && (
+  <div
+    onClick={() => navigate(`/project/${mostRecentProject.$id}`)}
+    className="relative group cursor-pointer"
+  >
+    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
+    <div className="relative glass rounded-xl overflow-hidden p-8 flex flex-col md:flex-row items-center gap-8 border-primary/10">
+      <div className={`w-full md:w-1/3 aspect-video rounded-lg bg-surface-container shadow-2xl relative flex items-center justify-center ${iconColors(mostRecentProject.icon).bg}`}>
+        <span className={`material-symbols-outlined text-[64px] ${iconColors(mostRecentProject.icon).text}`}>
+          {mostRecentProject.icon || "layers"}
+        </span>
+        <div className="absolute bottom-4 left-4 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Last Updated</span>
+        </div>
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center gap-2 text-primary mb-2">
+          <span className="material-symbols-outlined text-sm">history</span>
+          <span className="font-label-caps text-[11px] tracking-widest font-bold">CONTINUE WORKING</span>
+        </div>
+        <h3 className="font-headline-md text-headline-md text-white mb-3">{mostRecentProject.name}</h3>
+        <p className="text-on-surface-variant font-body-sm text-body-sm mb-6 max-w-xl">
+          {mostRecentProject.description || "No description yet."} Updated {relativeTime(mostRecentProject.$updatedAt)}.
+        </p>
+        <div className="flex items-center gap-4">
+          <button className="bg-primary text-on-primary px-6 py-2.5 rounded font-bold text-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all">
+            Resume Session
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 </section>
 {/* Bento Grid Section */}
 <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
@@ -216,9 +228,6 @@ export default function Home() {
 <div className="md:col-span-4 space-y-gutter">
 <div className="flex items-center justify-between">
 <h4 className="font-headline-md text-headline-md text-white">Pinned</h4>
-<button className="text-on-surface-variant hover:text-primary transition-colors">
-<span className="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
-</button>
 </div>
 <div className="space-y-4">
 {loading && (
@@ -271,19 +280,19 @@ export default function Home() {
 <h4 className="font-headline-md text-headline-md text-white">Recent Projects</h4>
 <div className="flex items-center gap-2">
 <div className="flex bg-surface-container-low rounded-lg p-1 border border-outline-variant/10">
-<button className="p-1.5 rounded bg-surface-variant text-primary">
-<span className="material-symbols-outlined text-[18px]" data-icon="grid_view">grid_view</span>
+<button onClick={() => setViewMode("grid")} className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-surface-variant text-primary" : "text-on-surface-variant hover:text-on-surface"}`}>
+<span className="material-symbols-outlined text-[18px]">grid_view</span>
 </button>
-<button className="p-1.5 rounded text-on-surface-variant hover:text-on-surface">
-<span className="material-symbols-outlined text-[18px]" data-icon="list">list</span>
+<button onClick={() => setViewMode("list")} className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-surface-variant text-primary" : "text-on-surface-variant hover:text-on-surface"}`}>
+<span className="material-symbols-outlined text-[18px]">list</span>
 </button>
 </div>
 </div>
 </div>
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+<div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 gap-6" : "flex flex-col gap-3"}>
 {loading &&
   Array.from({ length: 4 }).map((_, i) => (
-    <div key={i} className="glass rounded-xl p-6 h-[200px] animate-pulse" />
+    <div key={i} className={viewMode === "grid" ? "glass rounded-xl p-6 h-[200px] animate-pulse" : "glass rounded-xl h-16 animate-pulse"} />
   ))}
 
 {!loading && error && (
@@ -311,6 +320,7 @@ export default function Home() {
 
 {!loading &&
   !error &&
+  viewMode === "grid" &&
   recentProjects.map((project) => {
     const colors = iconColors(project.icon);
     return (
@@ -360,16 +370,58 @@ export default function Home() {
     );
   })}
 
+{!loading &&
+  !error &&
+  viewMode === "list" &&
+  recentProjects.map((project) => {
+    const colors = iconColors(project.icon);
+    return (
+      <div
+        key={project.$id}
+        onClick={() => navigate(`/project/${project.$id}`)}
+        className="glass glass-hover rounded-xl px-4 py-3 transition-all group flex items-center gap-4 cursor-pointer"
+      >
+        <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center ${colors.text} flex-shrink-0`}>
+          <span className="material-symbols-outlined text-[22px]">{project.icon || "layers"}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h5 className="font-bold text-sm text-white truncate">{project.name}</h5>
+          {project.description && (
+            <p className="text-xs text-on-surface-variant truncate">{project.description}</p>
+          )}
+        </div>
+        <span className="text-xs text-on-surface-variant flex-shrink-0 hidden sm:block">{relativeTime(project.$updatedAt)}</span>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+          <button onClick={(e) => handlePinToggle(e, project)} className="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-primary" title="Pin">
+            <span className="material-symbols-outlined text-[16px]">push_pin</span>
+          </button>
+          <button onClick={(e) => openEditModal(e, project)} className="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-primary" title="Edit">
+            <span className="material-symbols-outlined text-[16px]">edit</span>
+          </button>
+          <button onClick={(e) => handleDelete(e, project)} className="w-7 h-7 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-error" title="Delete">
+            <span className="material-symbols-outlined text-[16px]">delete</span>
+          </button>
+        </div>
+      </div>
+    );
+  })}
+
 {!loading && !error && (recentProjects.length > 0 || pinnedProjects.length > 0) && (
   <div
     onClick={openCreateModal}
-    className="glass glass-hover rounded-xl p-6 transition-all group flex flex-col h-[200px] border-dashed border-outline-variant/30 items-center justify-center text-center cursor-pointer"
+    className={
+      viewMode === "grid"
+        ? "glass glass-hover rounded-xl p-6 transition-all group flex flex-col h-[200px] border-dashed border-outline-variant/30 items-center justify-center text-center cursor-pointer"
+        : "glass glass-hover rounded-xl px-4 py-3 transition-all group flex items-center gap-4 border-dashed border-outline-variant/30 cursor-pointer"
+    }
   >
-    <div className="w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-      <span className="material-symbols-outlined text-[32px]">add_circle</span>
+    <div className={viewMode === "grid" ? "w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform" : "w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary flex-shrink-0"}>
+      <span className="material-symbols-outlined text-[24px]">add_circle</span>
     </div>
-    <h5 className="font-bold text-lg text-white">Create New Project</h5>
-    <p className="text-xs text-on-surface-variant px-4">Start a blank workspace</p>
+    <div>
+      <h5 className="font-bold text-sm sm:text-lg text-white">Create New Project</h5>
+      {viewMode === "grid" && <p className="text-xs text-on-surface-variant px-4">Start a blank workspace</p>}
+    </div>
   </div>
 )}
 </div>

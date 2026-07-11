@@ -8,6 +8,7 @@ import MemberManagement from "./pages/MemberManagement";
 import TeamChat from "./pages/TeamChat";
 import AIWorkspace from "./pages/AIWorkspace";
 import ResourceVault from "./pages/ResourceVault";
+import ProjectSettings from "./pages/ProjectSettings";
 
 // NOTE: each page below still renders its own full sidebar + topbar exactly
 // as authored in its source mockup (they weren't byte-identical to each
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/project/:projectId/chat" element={<TeamChat />} />
             <Route path="/project/:projectId/ai" element={<AIWorkspace />} />
             <Route path="/project/:projectId/resources" element={<ResourceVault />} />
+            <Route path="/project/:projectId/settings" element={<ProjectSettings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

@@ -18,9 +18,9 @@ export default function NameCaptureGate({ children }) {
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <span className="material-symbols-outlined text-primary text-[24px]">waving_hand</span>
         </div>
-        <h2 className="font-headline-md text-headline-md text-white mb-2">Welcome to DevRoom OS</h2>
+        <h2 className="font-headline-md text-headline-md text-white mb-2">Welcome to DevRoom</h2>
         <p className="text-sm text-on-surface-variant mb-6">
-          What should we call you? This is stored only in your browser — there's no account system yet.
+          What should we call you?
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input

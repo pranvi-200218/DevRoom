@@ -88,6 +88,10 @@ export default function AIWorkspace() {
                     <span>AI Assistant</span>
                 </a>
                 <a onClick={() => navigate(`/project/${projectId}/resources`)} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors cursor-pointer active:scale-95 duration-200">
+                    <span className="material-symbols-outlined text-[20px]">folder_open</span>
+                    <span>Resources</span>
+                </a>
+                <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors cursor-pointer active:scale-95 duration-200" title="Documents module isn't built yet">
                     <span className="material-symbols-outlined text-[20px]" data-icon="description">description</span>
                     <span>Docs</span>
                 </a>
@@ -112,7 +116,7 @@ export default function AIWorkspace() {
             </div>
         </nav>
         <div className="pt-6 border-t border-outline-variant/10 space-y-1">
-            <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-lg transition-colors cursor-pointer">
+            <a onClick={() => navigate(`/project/${projectId}/settings`)} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-lg transition-colors cursor-pointer">
                 <span className="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
                 <span>Settings</span>
             </a>
@@ -150,12 +154,8 @@ export default function AIWorkspace() {
                   className="bg-surface-container-lowest border border-outline-variant/20 rounded-full py-1.5 pl-9 pr-4 text-xs w-64 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all" placeholder="Search this conversation..." type="text" />
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-outline group-focus-within:text-primary" data-icon="search">search</span>
             </div>
-            <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-variant/50 transition-colors text-on-surface-variant">
-<span className="material-symbols-outlined" data-icon="account_tree">account_tree</span>
-</button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-variant/50 transition-colors text-on-surface-variant">
-<span className="material-symbols-outlined" data-icon="cloud_done" data-weight="fill">cloud_done</span>
-</button>
+            <span className="material-symbols-outlined w-10 h-10 flex items-center justify-center text-outline-variant/50" title="Workspace">account_tree</span>
+            <span className="material-symbols-outlined w-10 h-10 flex items-center justify-center text-primary/60" title="All changes saved">cloud_done</span>
         </div>
     </header>
     {/* Main Workspace Layout */}
@@ -316,11 +316,6 @@ export default function AIWorkspace() {
                         </div>
                     </div>
                 </div>
-                {/* Prompt Library Button */}
-                <button className="w-full py-3 rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2 font-bold text-[11px] uppercase tracking-widest">
-<span className="material-symbols-outlined text-[18px]" data-icon="library_books">library_books</span>
-                    Explore Library
-                </button>
             </div>
             {/* Footer Meta */}
             <div className="p-6 border-t border-outline-variant/10 space-y-4">

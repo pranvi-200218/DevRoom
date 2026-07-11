@@ -27,6 +27,7 @@ export default function ResourceVault() {
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [viewMode, setViewMode] = useState("grid");
 
   async function handleFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
@@ -96,11 +97,11 @@ export default function ResourceVault() {
             </div>
         </nav>
         <div className="pt-6 border-t border-outline-variant/10 space-y-1">
-            <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm">
+            <div onClick={() => navigate(`/project/${projectId}/settings`)} className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm">
                 <span className="material-symbols-outlined">settings</span>
                 <span>Settings</span>
             </div>
-            <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm">
+            <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm" title="Notifications aren't built yet">
                 <span className="material-symbols-outlined">notifications</span>
                 <span>Notifications</span>
             </div>
@@ -126,12 +127,8 @@ export default function ResourceVault() {
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="p-2 text-on-surface-variant hover:text-primary transition-all cursor-pointer">
-<span className="material-symbols-outlined">account_tree</span>
-</button>
-                    <button className="p-2 text-on-surface-variant hover:text-primary transition-all cursor-pointer">
-<span className="material-symbols-outlined">cloud_done</span>
-</button>
+                    <span className="material-symbols-outlined text-outline-variant/50 p-2" title="Workspace">account_tree</span>
+                    <span className="material-symbols-outlined text-primary/60 p-2" title="All changes saved">cloud_done</span>
                     <div className="w-8 h-8 rounded-full bg-surface-variant ml-2 overflow-hidden border border-outline-variant/20">
                         <img className="w-full h-full object-cover" data-alt="Close-up portrait of a professional software engineer with glasses, looking focused against a dark background with subtle blue light bokeh. Professional and modern tech photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDost60FcqyQ_ogOSUxuBKb8AdC5Iu599437Ke-Ng-cV9Rn0GoZhG2FFRbhJjK6IqxiDxKeOVDJWJedB2P_XlD64oMOMvHRdTxlZFcKd_QkYqpmTAhKG4GIMPeeiROi4w-iu0cXRvma2nOkWw9hkuRfPTY40XIDnWIZXcklMoZ7KKMrSeqAla1RVea9N80eyOlrtGbbGqhE_kAH3-Rf4_50OqclhEk6t_Av2HYTC3hfWpsZMM3twvFGMAehaq7NkJwa8F6FFWDGiFo"
                         />
@@ -151,10 +148,10 @@ export default function ResourceVault() {
                   </button>
                 )}
                 <div className="flex items-center gap-2 bg-surface-container-lowest p-1 rounded-lg border border-outline-variant/10">
-                    <button className="p-1.5 bg-surface-variant text-primary rounded-md shadow-sm">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-surface-variant text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
 <span className="material-symbols-outlined text-[20px]">grid_view</span>
 </button>
-                    <button className="p-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-surface-variant text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
 <span className="material-symbols-outlined text-[20px]">list</span>
 </button>
                 </div>
@@ -226,6 +223,7 @@ export default function ResourceVault() {
                 {!loading && !error && recentFiles.length === 0 && (
                   <p className="text-sm text-on-surface-variant">No recent uploads. Drag a file above to get started.</p>
                 )}
+                {viewMode === "grid" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 {recentFiles.map((file) => {
   const visual = fileVisual(file.mimeType);
@@ -258,6 +256,29 @@ export default function ResourceVault() {
   );
 })}
                 </div>
+                )}
+                {viewMode === "list" && (
+                <div className="space-y-2">
+{recentFiles.map((file) => {
+  const visual = fileVisual(file.mimeType);
+  return (
+    <div key={file.$id} className="glass-panel-vault p-3 rounded-xl flex items-center justify-between hover:bg-surface-variant/20 transition-all group">
+        <div className="flex items-center gap-3 min-w-0">
+            <span className={`material-symbols-outlined ${visual.color} text-[22px] flex-shrink-0`}>{visual.icon}</span>
+            <div className="min-w-0">
+                <p className="font-body-sm text-body-sm font-medium text-on-surface truncate">{file.name}</p>
+                <p className="font-code-sm text-code-sm text-on-surface-variant">{relativeTime(file.$createdAt)} • {formatBytes(file.size)}</p>
+            </div>
+        </div>
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+            <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary"><span className="material-symbols-outlined text-[18px]">download</span></a>
+            <button onClick={(e) => handleDeleteFile(e, file)} className="p-2 text-on-surface-variant hover:text-error"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+        </div>
+    </div>
+  );
+})}
+                </div>
+                )}
             </div>
             {/* Secondary List for older files */}
             <div className="mt-12">
