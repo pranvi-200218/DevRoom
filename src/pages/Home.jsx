@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
@@ -43,6 +43,35 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
+  const [uptimeSeconds, setUptimeSeconds] = useState(0);
+  const searchInputRef = useRef(null);
+
+  // Live session uptime, counted from when Home mounted
+  useEffect(() => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      setUptimeSeconds(Math.floor((Date.now() - start) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  function formatUptime(totalSeconds) {
+    const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+    const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const s = String(totalSeconds % 60).padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  }
+
+  async function openSharedVSCode() {
+    const url = "https://vscode.dev";
+    window.open(url, "_blank", "noopener,noreferrer");
+    try {
+      await navigator.clipboard.writeText(url);
+      alert("VS Code opened in a new tab — link copied, share it with your team so everyone can join.");
+    } catch {
+      alert(`VS Code opened in a new tab — share this link with your team: ${url}`);
+    }
+  }
 
   function openCreateModal() {
     setEditingProject(null);
@@ -80,76 +109,16 @@ export default function Home() {
           onSubmit={(data) => (editingProject ? updateProject(editingProject.$id, data) : createProject(data))}
         />
       )}
-{/* Sidebar Navigation Shell */}
-<aside className="bg-surface-container-low dark:bg-surface-container-low w-sidebar-width h-screen fixed left-0 top-0 border-r border-outline-variant/10 flex flex-col h-full py-6 px-4 z-50" id="sidebar">
-<div className="mb-10 px-2 flex items-center gap-3">
-<div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-<span className="material-symbols-outlined text-on-primary text-[20px]" style={{fontVariationSettings: "'FILL' 1"}}>terminal</span>
-</div>
-<div>
-<h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary leading-tight">DevRoom OS</h1>
-<p className="text-[11px] uppercase tracking-widest text-on-surface-variant font-medium">Engineering Workspace</p>
-</div>
-</div>
-<nav className="flex-1 space-y-1">
-{/* Active Tab: Custom logic (Home/Dashboard usually maps to generic but here we map Workspace/Projects) */}
-<div className="bg-surface-container-highest text-primary font-medium rounded-lg cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
-<span className="material-symbols-outlined" data-icon="chat">chat</span>
-<span className="font-body-sm text-body-sm">Chat</span>
-</div>
-<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
-<span className="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
-<span className="font-body-sm text-body-sm">AI Assistant</span>
-</div>
-<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
-<span className="material-symbols-outlined" data-icon="description">description</span>
-<span className="font-body-sm text-body-sm">Docs</span>
-</div>
-<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
-<span className="material-symbols-outlined" data-icon="folder_open">folder_open</span>
-<span className="font-body-sm text-body-sm">Resources</span>
-</div>
-<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
-<span className="material-symbols-outlined" data-icon="send">send</span>
-<span className="font-body-sm text-body-sm">Submissions</span>
-</div>
-</nav>
-<div className="mt-auto space-y-1">
-<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
-<span className="material-symbols-outlined" data-icon="settings">settings</span>
-<span className="font-body-sm text-body-sm">Settings</span>
-</div>
-<div className="text-on-surface-variant hover:text-on-surface cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-variant/50 transition-colors">
-<span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-<span className="font-body-sm text-body-sm">Notifications</span>
-</div>
-<div className="pt-6 border-t border-outline-variant/10 mt-4 flex items-center gap-3 px-2">
-<div className="w-8 h-8 rounded-full overflow-hidden bg-surface-variant">
-<img className="w-full h-full object-cover" data-alt="A professional headshot of a developer in a high-tech studio with soft cyan backlighting. The aesthetic is clean and modern, focusing on technical proficiency and a calm workspace atmosphere. Minimalist dark clothing and sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTHLdCi81Y3kmL94me3c3twAskb4fS9P7F34JJlwbdkLOXfP7z31MqDu-lStyqpeLKCEORhiLdwx_lYECbUM90ARhqFdIyBttDXyYYAa-JQ96eMrSCS-XefShdCd9PDtCls-sElF7emeKP0aFBmv7T1F2RJBeMd4Sgf5AGx2TXCW6x5TiE7UoorC31uwmzP79kjyxxb9HWSFdmN5k7hPQ5jFx2II5R_ExxGbT_Jj_QkzW5hyVkmKI3W_lVJjmcPhtcM_6BtTQOKNs"/>
-</div>
-<div className="flex-1 min-w-0">
-<p className="text-sm font-medium truncate">{user.name}</p>
-<p className="text-[10px] text-on-surface-variant uppercase tracking-tighter">Pro Tier</p>
-</div>
-</div>
-</div>
-</aside>
 {/* Main Content Area */}
-<main className="ml-sidebar-width min-h-screen relative flex flex-col">
+<main className="min-h-screen relative flex flex-col">
 {/* Top Navigation */}
-<header className="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 flex justify-between items-center h-16 px-gutter sticky top-0 z-40">
-<div className="flex items-center gap-6">
-<div className="flex items-center gap-2">
-<span className="text-primary font-bold font-label-caps text-label-caps tracking-[0.1em]">PROJECT ALPHA</span>
-<span className="text-outline-variant text-xs">/</span>
-<span className="text-on-surface-variant font-label-caps text-label-caps">SPRINT 4</span>
-</div>
-</div>
+<header className="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 flex justify-end items-center h-16 px-gutter sticky top-0 z-40">
 {/* Command Palette Style Search */}
 <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-lg hidden md:block">
 <div className="glass h-10 rounded-lg flex items-center px-4 gap-3 hover:border-primary/30 transition-all primary-glow">
 <span className="material-symbols-outlined text-outline text-[20px]" data-icon="search">search</span>
 <input
+  ref={searchInputRef}
   value={searchTerm}
   onChange={(e) => setSearchTerm(e.target.value)}
   placeholder="Search projects..."
@@ -164,7 +133,12 @@ export default function Home() {
 </div>
 <div className="flex items-center gap-4">
 <span className="material-symbols-outlined text-outline-variant/50" title="Workspace">account_tree</span>
-<span className="material-symbols-outlined text-primary/60" title="All changes saved">cloud_done</span>
+<span
+  className={`material-symbols-outlined ${error ? "text-error" : loading ? "text-outline-variant/50" : "text-primary/60"}`}
+  title={error ? "Sync failed" : loading ? "Syncing..." : "All changes saved"}
+>
+  {error ? "cloud_off" : loading ? "cloud_sync" : "cloud_done"}
+</span>
 <div className="h-6 w-[1px] bg-outline-variant/30 mx-1"></div>
 <button
   onClick={openCreateModal}
@@ -212,7 +186,13 @@ export default function Home() {
           {mostRecentProject.description || "No description yet."} Updated {relativeTime(mostRecentProject.$updatedAt)}.
         </p>
         <div className="flex items-center gap-4">
-          <button className="bg-primary text-on-primary px-6 py-2.5 rounded font-bold text-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/project/${mostRecentProject.$id}`);
+            }}
+            className="bg-primary text-on-primary px-6 py-2.5 rounded font-bold text-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all"
+          >
             Resume Session
             <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </button>
@@ -462,10 +442,10 @@ export default function Home() {
 <footer className="mt-auto h-12 border-t border-outline-variant/10 px-gutter flex items-center justify-between text-[11px] font-medium text-on-surface-variant uppercase tracking-widest">
 <div className="flex items-center gap-6">
 <div className="flex items-center gap-2">
-<span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-<span>Ready</span>
+<span className={`w-1.5 h-1.5 rounded-full ${error ? "bg-error" : loading ? "bg-secondary animate-pulse" : "bg-primary"}`}></span>
+<span>{error ? "Error" : loading ? "Syncing" : "Ready"}</span>
 </div>
-<span>Uptime: 24:08:12</span>
+<span>Uptime: {formatUptime(uptimeSeconds)}</span>
 </div>
 <div className="flex items-center gap-6">
 <span>Branch: main</span>
@@ -477,7 +457,11 @@ export default function Home() {
 </footer>
 </main>
 {/* FAB Action (Suppressed on Home according to shell rules, but including for context if intended as global action) */}
-<div className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all z-50 group" id="command-trigger">
+<div
+  onClick={openSharedVSCode}
+  className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all z-50 group"
+  id="command-trigger"
+>
 <span className="material-symbols-outlined text-[28px]" data-icon="terminal" style={{fontVariationSettings: "'FILL' 1"}}>terminal</span>
 <div className="absolute right-full mr-4 bg-surface-container-high border border-outline-variant/20 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
 <span className="font-label-caps text-[10px] font-bold text-white">Open Terminal (⌘ + `)</span>

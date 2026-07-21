@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessages, usePresence } from "../hooks/useMessages";
 import { useProject } from "../hooks/useProjects";
@@ -6,6 +6,8 @@ import { useUser } from "../context/UserContext";
 import { relativeTime } from "../lib/format";
 
 const CHANNEL = "general";
+const QUICK_EMOJIS = ["😀", "👍", "🎉", "🚀", "❤️", "👀", "🔥", "✅"];
+const URL_REGEX = /(https?:\/\/[^\s]+)/gi;
 
 export default function TeamChat() {
   const { projectId } = useParams();
@@ -31,19 +33,73 @@ export default function TeamChat() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [attachment, setAttachment] = useState(null);
+  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const fileInputRef = useRef(null);
   const scrollRef = useRef(null);
   const typingTimeout = useRef(null);
+  const textareaRef = useRef(null);
+  const emojiRef = useRef(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages.length]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (emojiRef.current && !emojiRef.current.contains(e.target)) setEmojiOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const visibleMessages = showPinnedOnly ? pinnedMessages : messages;
+
+  const sharedLinks = useMemo(() => {
+    const found = [];
+    const seen = new Set();
+    for (let i = messages.length - 1; i >= 0 && found.length < 5; i--) {
+      const msg = messages[i];
+      const matches = msg.text ? msg.text.match(URL_REGEX) : null;
+      if (!matches) continue;
+      for (const url of matches) {
+        if (seen.has(url)) continue;
+        seen.add(url);
+        found.push({ url, authorName: msg.authorName, id: `${msg.$id}-${url}` });
+        if (found.length >= 5) break;
+      }
+    }
+    return found;
+  }, [messages]);
 
   function handleDraftChange(value) {
     setDraft(value);
     setTyping(true);
     clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => setTyping(false), 2500);
+  }
+
+  function wrapSelection(marker) {
+    const el = textareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const before = draft.slice(0, start);
+    const selected = draft.slice(start, end);
+    const after = draft.slice(end);
+    const next = `${before}${marker}${selected || "text"}${marker}${after}`;
+    handleDraftChange(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const cursor = selected ? end + marker.length * 2 : start + marker.length;
+      el.setSelectionRange(cursor, cursor + (selected ? 0 : 4));
+    });
+  }
+
+  function insertEmoji(emoji) {
+    handleDraftChange(draft + emoji);
+    setEmojiOpen(false);
+    textareaRef.current?.focus();
   }
 
   async function handleSend() {
@@ -94,56 +150,25 @@ export default function TeamChat() {
                 <span className="material-symbols-outlined text-lg">smart_toy</span>
                 <span className="font-body-sm text-body-sm">AI Assistant</span>
             </a>
-            <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200" href="#">
-                <span className="material-symbols-outlined text-lg">description</span>
-                <span className="font-body-sm text-body-sm">Docs</span>
-            </a>
             <a onClick={() => navigate(`/project/${projectId}/resources`)} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
                 <span className="material-symbols-outlined text-lg">folder_open</span>
                 <span className="font-body-sm text-body-sm">Resources</span>
             </a>
-            <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200" href="#">
-                <span className="material-symbols-outlined text-lg">send</span>
-                <span className="font-body-sm text-body-sm">Submissions</span>
-            </a>
-            <div className="pt-6 px-2 mb-2">
-                <span className="text-[10px] font-bold text-outline uppercase tracking-widest">Active Threads</span>
-            </div>
-            <div className="space-y-0.5">
-                <div className="flex items-center gap-2 px-3 py-1.5 text-on-surface-variant hover:text-primary transition-all cursor-pointer text-sm group">
-                    <span className="text-outline group-hover:text-primary">#</span>
-                    <span>frontend-core</span>
-                </div>
-                <div className="flex items-center justify-between px-3 py-1.5 bg-surface-variant/20 border-l-2 border-primary text-on-surface font-medium cursor-pointer text-sm">
-                    <div className="flex items-center gap-2">
-                        <span className="text-primary">#</span>
-                        <span>sprint-planning</span>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(138,235,255,0.6)]"></div>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 text-on-surface-variant hover:text-primary transition-all cursor-pointer text-sm group">
-                    <span className="text-outline group-hover:text-primary">#</span>
-                    <span>deployment-logs</span>
-                </div>
-            </div>
         </nav>
         <div className="mt-auto space-y-1">
-            <a className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200" href="#">
+            <a onClick={() => navigate(`/project/${projectId}/settings`)} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
                 <span className="material-symbols-outlined text-lg">settings</span>
                 <span className="font-body-sm text-body-sm">Settings</span>
             </a>
-            <div className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
+            <div onClick={() => alert("No new notifications yet.")} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
                 <span className="material-symbols-outlined text-lg">notifications</span>
                 <span className="font-body-sm text-body-sm">Notifications</span>
-                <span className="ml-auto bg-error text-on-error text-[10px] px-1.5 rounded-full font-bold">3</span>
             </div>
             <div className="pt-4 flex items-center gap-3 px-2">
-                <img className="w-10 h-10 rounded-lg object-cover ring-1 ring-outline/20" data-alt="Close up portrait of a senior developer with glasses, cinematic lighting, ultra-detailed, 8k resolution, modern professional aesthetic, deep blacks and tech-focused background"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAefsNnQKIZ0GT4_HocMT70tdc02G1i4rQHmRlTS7WJMFZYBzY9c7O8s-aMq6HO2PHCtn0GdAT5j-26nKOYVNxMnV6NtGHpuXp_NBXsSPz8XBFvfwho7BVL1KioaY-KB2Ms9TjWUhRs0UI5Pr0gnbWrr3ZWpD_M8nFlwpcaYkHkqBgTIEx60UKBjSYTzba4Mk47u_w6l2ynbN0_pqo5hdt-xcjeiHnX-CDd7c5hl28QKPDD5ruROBHQ5-50Ut-_14lS2wFPXNVafJk"
-                />
+                <img className="w-10 h-10 rounded-lg object-cover ring-1 ring-outline/20" alt={user.name} src={user.avatarUrl} />
                 <div className="flex flex-col overflow-hidden">
                     <span className="font-bold text-sm truncate">{user.name}</span>
-                    <span className="text-[10px] text-primary">Senior Arch</span>
+                    <span className="text-[10px] text-primary">{user.tier}</span>
                 </div>
             </div>
         </div>
@@ -159,10 +184,14 @@ export default function TeamChat() {
                     <span className="font-label-caps text-label-caps text-primary font-bold tracking-widest">#{CHANNEL.toUpperCase()}</span>
                 </div>
                 <div className="h-4 w-px bg-outline-variant/30"></div>
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                    <span className="material-symbols-outlined text-sm">push_pin</span>
+                <button
+                  onClick={() => setShowPinnedOnly((v) => !v)}
+                  className={`flex items-center gap-2 transition-colors ${showPinnedOnly ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}
+                  title={showPinnedOnly ? "Showing pinned only — click to show all" : "Show pinned messages only"}
+                >
+                    <span className="material-symbols-outlined text-sm" style={showPinnedOnly ? { fontVariationSettings: "'FILL' 1" } : undefined}>push_pin</span>
                     <span className="text-xs font-medium">{pinnedMessages.length} Pinned</span>
-                </div>
+                </button>
             </div>
             <div className="flex items-center gap-4">
                 <div className="relative group">
@@ -174,15 +203,17 @@ export default function TeamChat() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="bg-surface-container-lowest border border-outline-variant/30 rounded-lg pl-10 pr-4 py-1.5 text-xs w-64 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" placeholder="Search messages..." type="text"
                     />
-                    <div className="absolute right-3 top-1.5 px-1.5 py-0.5 rounded border border-outline-variant/50 text-[10px] text-on-surface-variant font-mono">⌘K</div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="p-2 text-on-surface-variant hover:text-primary transition-all cursor-pointer">
+                    <button onClick={() => navigate("/")} className="p-2 text-on-surface-variant hover:text-primary transition-all cursor-pointer" title="Back to Projects">
 <span className="material-symbols-outlined">account_tree</span>
 </button>
-                    <button className="p-2 text-on-surface-variant hover:text-primary transition-all cursor-pointer">
-<span className="material-symbols-outlined">cloud_done</span>
-</button>
+                    <span
+                      className={`material-symbols-outlined p-2 ${error ? "text-error" : loading ? "text-outline-variant" : "text-primary"}`}
+                      title={error ? "Sync failed" : loading ? "Syncing…" : "All changes saved"}
+                    >
+                      {error ? "cloud_off" : loading ? "cloud_sync" : "cloud_done"}
+                    </span>
                 </div>
             </div>
         </header>
@@ -192,11 +223,13 @@ export default function TeamChat() {
             <div ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto pt-6 px-gutter bg-surface custom-scrollbar">
                 {loading && <p className="text-sm text-on-surface-variant text-center">Loading messages…</p>}
                 {!loading && error && <p className="text-sm text-error text-center">{error}</p>}
-                {!loading && !error && messages.length === 0 && (
-                  <p className="text-sm text-on-surface-variant text-center">No messages yet. Say hi 👋</p>
+                {!loading && !error && visibleMessages.length === 0 && (
+                  <p className="text-sm text-on-surface-variant text-center">
+                    {showPinnedOnly ? "No pinned messages yet." : "No messages yet. Say hi 👋"}
+                  </p>
                 )}
                 <div className="space-y-6 pb-10">
-{messages.map((msg) => {
+{visibleMessages.map((msg) => {
   const isOwn = msg.authorId === user.$id;
   return (
     <div key={msg.$id} className="flex gap-4 group">
@@ -272,15 +305,26 @@ export default function TeamChat() {
                     <div>
                         <span className="text-[10px] font-bold text-outline uppercase tracking-widest block mb-3">Shared Links</span>
                         <div className="space-y-3">
-                            <div className="flex items-center gap-3 group cursor-pointer">
-                                <div className="p-1.5 bg-surface-variant rounded">
-                                    <span className="material-symbols-outlined text-sm">link</span>
-                                </div>
-                                <div className="flex flex-col overflow-hidden">
-                                    <span className="text-[11px] font-medium truncate">figma.com/file/alpha-ui...</span>
-                                    <span className="text-[9px] text-outline-variant">Shared by Elena</span>
-                                </div>
-                            </div>
+                            {sharedLinks.length === 0 && (
+                              <p className="text-[11px] text-on-surface-variant">No links shared in this channel yet.</p>
+                            )}
+                            {sharedLinks.map((link) => (
+                              <a
+                                key={link.id}
+                                href={link.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-3 group cursor-pointer"
+                              >
+                                  <div className="p-1.5 bg-surface-variant rounded">
+                                      <span className="material-symbols-outlined text-sm">link</span>
+                                  </div>
+                                  <div className="flex flex-col overflow-hidden">
+                                      <span className="text-[11px] font-medium truncate group-hover:text-primary">{link.url}</span>
+                                      <span className="text-[9px] text-outline-variant">Shared by {link.authorName || "someone"}</span>
+                                  </div>
+                              </a>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -291,23 +335,38 @@ export default function TeamChat() {
             <div className="max-w-4xl mx-auto glass-panel-chat border border-outline-variant/20 rounded-2xl overflow-hidden shadow-2xl relative">
                 {/* Action Bar */}
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-outline-variant/5 bg-surface-container-lowest/50">
-                    <button className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
+                    <button onClick={() => wrapSelection("**")} title="Bold" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <span className="material-symbols-outlined text-lg">format_bold</span>
 </button>
-                    <button className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
+                    <button onClick={() => wrapSelection("_")} title="Italic" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <span className="material-symbols-outlined text-lg">format_italic</span>
 </button>
-                    <button className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
+                    <button onClick={() => wrapSelection("`")} title="Code" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <span className="material-symbols-outlined text-lg">code</span>
 </button>
                     <div className="h-4 w-px bg-outline-variant/20 mx-1"></div>
-                    <button onClick={() => fileInputRef.current?.click()} className={`p-1.5 transition-all rounded hover:bg-surface-variant/30 ${attachment ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}>
+                    <button onClick={() => fileInputRef.current?.click()} title="Attach file" className={`p-1.5 transition-all rounded hover:bg-surface-variant/30 ${attachment ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}>
 <span className="material-symbols-outlined text-lg">attach_file</span>
 </button>
                     <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => setAttachment(e.target.files[0] || null)} />
-                    <button className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
+                    <div className="relative" ref={emojiRef}>
+                      <button onClick={() => setEmojiOpen((v) => !v)} title="Emoji" className={`p-1.5 transition-all rounded hover:bg-surface-variant/30 ${emojiOpen ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}>
 <span className="material-symbols-outlined text-lg">mood</span>
 </button>
+                      {emojiOpen && (
+                        <div className="absolute bottom-full mb-2 left-0 bg-surface-container-high border border-outline-variant/20 rounded-lg p-2 flex gap-1 shadow-xl z-10">
+                          {QUICK_EMOJIS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              onClick={() => insertEmoji(emoji)}
+                              className="text-lg hover:scale-125 transition-transform"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                 </div>
                 {attachment && (
                   <div className="px-4 pt-2 flex items-center gap-2 text-xs text-on-surface-variant">
@@ -319,6 +378,7 @@ export default function TeamChat() {
                 {/* Input Area */}
                 <div className="p-4 flex items-end gap-3">
                     <textarea
+                      ref={textareaRef}
                       value={draft}
                       onChange={(e) => handleDraftChange(e.target.value)}
                       onKeyDown={handleKeyDown}
@@ -333,31 +393,6 @@ export default function TeamChat() {
                 <span className="text-[10px] text-outline-variant font-mono"><b>Return</b> to send • <b>Shift+Return</b> for new line</span>
             </div>
         </footer>
-        {/* Command Palette Overlay (Hidden by Default, can be toggled) */}
-        <div className="hidden fixed inset-0 z-[60] flex items-start justify-center pt-32 bg-background/60 backdrop-blur-sm" id="cmd-palette">
-            <div className="w-full max-w-lg glass-panel-chat border border-primary/20 rounded-xl shadow-[0_0_40px_rgba(138,235,255,0.1)] overflow-hidden">
-                <div className="p-4 flex items-center gap-3 border-b border-outline-variant/20">
-                    <span className="material-symbols-outlined text-primary">terminal</span>
-                    <input className="bg-transparent border-none focus:ring-0 flex-1 text-sm text-on-surface" placeholder="Run a command..." type="text" />
-                </div>
-                <div className="p-2 space-y-1">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-surface-variant/30 border-l-2 border-primary group cursor-pointer">
-                        <div className="flex items-center gap-3">
-                            <span className="material-symbols-outlined text-primary text-sm">person_search</span>
-                            <span className="text-xs font-medium">Find user @dev...</span>
-                        </div>
-                        <span className="text-[10px] text-outline-variant font-mono">U</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-variant/30 group cursor-pointer transition-all">
-                        <div className="flex items-center gap-3">
-                            <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-sm">history</span>
-                            <span className="text-xs font-medium">Jump to recent threads</span>
-                        </div>
-                        <span className="text-[10px] text-outline-variant font-mono">J</span>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
     </>
   );
