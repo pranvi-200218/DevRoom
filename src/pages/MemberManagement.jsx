@@ -6,13 +6,11 @@ import { useUser } from "../context/UserContext";
 import { relativeTime } from "../lib/format";
 
 const ROLES = ["Owner", "Editor", "Viewer"];
-
 function initials(nameOrEmail) {
   const base = nameOrEmail || "?";
   const parts = base.split(/[@\s._-]+/).filter(Boolean);
   return (parts[0]?.[0] || "?").toUpperCase() + (parts[1]?.[0] || "").toUpperCase();
 }
-
 function Avatar({ label }) {
   return (
     <div className="w-10 h-10 rounded-lg bg-surface-container-highest border border-white/10 flex items-center justify-center text-sm font-bold text-primary">
@@ -20,7 +18,6 @@ function Avatar({ label }) {
     </div>
   );
 }
-
 export default function MemberManagement() {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -41,6 +38,13 @@ export default function MemberManagement() {
   const [role, setRole] = useState("Editor");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [memberSearch, setMemberSearch] = useState("");
+
+  const filteredMembers = activeMembers.filter((m) => {
+    const term = memberSearch.trim().toLowerCase();
+    if (!term) return true;
+    return (m.name || "").toLowerCase().includes(term) || (m.email || "").toLowerCase().includes(term);
+  });
 
   async function handleInvite(e) {
     e.preventDefault();
@@ -121,7 +125,7 @@ export default function MemberManagement() {
                 />
                 <div className="overflow-hidden">
                     <p className="text-body-sm font-medium truncate">{currentUser.name}</p>
-                    <p className="text-[11px] text-on-surface-variant truncate">Pro Plan</p>
+                    <p className="text-[11px] text-on-surface-variant truncate">{currentUser.tier}</p>
                 </div>
             </div>
         </div>
@@ -131,21 +135,24 @@ export default function MemberManagement() {
         <div className="flex items-center gap-4 flex-1">
             <div className="relative w-full max-w-md group focus-within:ring-1 focus-within:ring-primary rounded-lg transition-all duration-200">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-                <input className="w-full bg-surface-container-lowest border-none rounded-lg pl-10 pr-4 py-2 text-body-sm focus:ring-0 placeholder:text-on-surface-variant/50" placeholder="Search members..." type="text" />
+                <input
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  className="w-full bg-surface-container-lowest border-none rounded-lg pl-10 pr-4 py-2 text-body-sm focus:ring-0 placeholder:text-on-surface-variant/50" placeholder="Search members..." type="text" />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded border border-white/10 text-[10px] text-on-surface-variant font-code-sm">
                     ⌘K
                 </div>
             </div>
         </div>
         <div className="flex items-center gap-4">
-            <button className="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" title="Notifications aren't built yet">
+            <button onClick={() => alert("No new notifications yet.")} className="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" title="Notifications">
 <span className="material-symbols-outlined">notifications</span>
 </button>
-            <div className="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 flex items-center justify-center overflow-hidden">
-                <img className="w-full h-full object-cover" data-alt="A sleek, minimalist profile avatar represention, rendered in a 3D isometric style with soft shadows and a cool color palette of deep grays and electric cyans. The lighting is focused and clean, embodying a high-end tech aesthetic."
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxuBhjIK1K1VpegiE1WbIlUxuE1Zbsg2OuXBf5J6Nlj-JQ2ARWVQP2fVnYG-b92DfXhcJQcJno-cGmu5vru0UySFVA9SaZRfZVWBPV2Mhv03NhQIhEp2UAk95k1vojXmTvI1T5HeyCm8-Ydp30rjmYD9fPlNcnKzAz_7WMEkBggBKy_-tFDfjsJXMgKxq8gsH1GJTZCRiPmGpihEpGJQ_vJqY0KOgGr_8TyAqPdgzbtZgVGZD52t4WKanrt6HoCe-vz5Glf_0g_jI"
+            <button onClick={() => navigate(`/project/${projectId}/settings`)} className="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 flex items-center justify-center overflow-hidden" title={currentUser.name}>
+                <img className="w-full h-full object-cover" alt={currentUser.name}
+                    src={currentUser.avatarUrl}
                 />
-            </div>
+            </button>
         </div>
     </header>
     {/* Main Content Canvas */}
@@ -250,10 +257,12 @@ export default function MemberManagement() {
 {!loading && error && (
   <tr><td colSpan={3} className="px-6 py-8 text-center text-error text-sm">{error}</td></tr>
 )}
-{!loading && !error && activeMembers.length === 0 && (
-  <tr><td colSpan={3} className="px-6 py-8 text-center text-on-surface-variant text-sm">No members yet. Invite someone above.</td></tr>
+{!loading && !error && filteredMembers.length === 0 && (
+  <tr><td colSpan={3} className="px-6 py-8 text-center text-on-surface-variant text-sm">
+    {memberSearch ? `No members match "${memberSearch}".` : "No members yet. Invite someone above."}
+  </td></tr>
 )}
-{!loading && !error && activeMembers.map((member) => (
+{!loading && !error && filteredMembers.map((member) => (
   <tr key={member.$id} className="hover:bg-white/5 transition-colors group">
       <td className="px-6 py-4">
           <div className="flex items-center gap-3">
@@ -287,7 +296,7 @@ export default function MemberManagement() {
                             </table>
                         </div>
                         <div className="px-6 py-4 bg-white/5 border-t border-white/5 flex justify-between items-center text-[12px] text-on-surface-variant">
-                            <span>Showing {activeMembers.length} of {activeMembers.length} members</span>
+                            <span>Showing {filteredMembers.length} of {activeMembers.length} members</span>
                             <div className="flex gap-2">
                                 <button className="px-3 py-1 rounded border border-white/10 transition-colors opacity-40 cursor-not-allowed" disabled title="Pagination isn't built yet — this shows everyone">Previous</button>
                                 <button className="px-3 py-1 rounded border border-white/10 transition-colors opacity-40 cursor-not-allowed" disabled title="Pagination isn't built yet — this shows everyone">Next</button>
