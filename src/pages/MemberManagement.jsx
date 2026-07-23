@@ -6,11 +6,13 @@ import { useUser } from "../context/UserContext";
 import { relativeTime } from "../lib/format";
 
 const ROLES = ["Owner", "Editor", "Viewer"];
+
 function initials(nameOrEmail) {
   const base = nameOrEmail || "?";
   const parts = base.split(/[@\s._-]+/).filter(Boolean);
   return (parts[0]?.[0] || "?").toUpperCase() + (parts[1]?.[0] || "").toUpperCase();
 }
+
 function Avatar({ label }) {
   return (
     <div className="w-10 h-10 rounded-lg bg-surface-container-highest border border-white/10 flex items-center justify-center text-sm font-bold text-primary">
@@ -18,6 +20,7 @@ function Avatar({ label }) {
     </div>
   );
 }
+
 export default function MemberManagement() {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -219,7 +222,7 @@ export default function MemberManagement() {
           <p className="text-[11px] text-on-surface-variant">Sent {relativeTime(invite.$updatedAt)} • {invite.role}</p>
       </div>
       <div className="flex items-center gap-1">
-          <button onClick={() => resendInvite(invite.$id)} className="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Resend">
+          <button onClick={() => resendInvite(invite.$id, { projectName: project?.name || "a DevRoom OS project", inviterName: currentUser.name })} className="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Resend">
 <span className="material-symbols-outlined text-[18px]">refresh</span>
 </button>
           <button onClick={() => removeMember(invite.$id)} className="p-2 text-on-surface-variant hover:text-error transition-colors" title="Cancel">

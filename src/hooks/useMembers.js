@@ -72,12 +72,25 @@ export function useMembers(projectId) {
         setMembers((prev) => prev.filter((m) => m.$id !== id));
     }, []);
 
-    const resendInvite = useCallback(async(id) => {
+    const resendInvite = useCallback(async(id, { projectName, inviterName } = {}) => {
         // Re-stamps invitedBy/updatedAt so "Sent Xh ago" reflects the resend.
         const doc = await databases.updateDocument(databaseId, membersCollectionId, id, {
             invitedBy: user.$id,
         });
         setMembers((prev) => prev.map((m) => (m.$id === id ? doc : m)));
+
+        // Best-effort: don't fail the resend if the email fails to send.
+        try {
+            await functions.createExecution(
+                sendInviteFunctionId,
+                JSON.stringify({ to: doc.email, role: doc.role, projectName, inviterName }),
+                false
+            );
+        } catch (err) {
+            console.warn("Invite re-stamped, but the email failed to send:", err.message);
+        }
+
+        return doc;
     }, [user.$id]);
 
     const activeMembers = members.filter((m) => m.status === "active");
