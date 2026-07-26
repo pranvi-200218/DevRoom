@@ -1,12 +1,6 @@
 import { databases, appwriteConfig, Query } from "./appwrite";
 import { syncProjectAccess } from "./syncProjectAccess";
-
 const { databaseId, membersCollectionId } = appwriteConfig;
-
-// Call this once right after a user logs in or signs up. It finds any
-// pending invites sent to their email, attaches their real account ($id)
-// to those member records, and refreshes Appwrite permissions on the
-// affected projects so the new member can actually see them.
 export async function linkPendingInvites(userId, email) {
     if (!email) return 0;
 
