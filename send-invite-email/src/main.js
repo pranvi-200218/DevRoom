@@ -33,6 +33,7 @@ export default async({ req, res, log, error }) => {
     if (!to || typeof to !== "string") {
         return res.json({ error: "Missing 'to' email address." }, 400);
     }
+    log(`Inviting ${to} as ${role} to "${projectName}" (invited by ${inviterName})`);
 
     const apiKey = req.headers["x-appwrite-key"] || process.env.APPWRITE_API_KEY || "";
     if (!apiKey) {
@@ -56,9 +57,11 @@ export default async({ req, res, log, error }) => {
         const existing = await users.list([Query.equal("email", to)]);
         if (existing.total > 0) {
             userId = existing.users[0].$id;
+            log(`Found existing user ${userId} for ${to}`);
         } else {
             const created = await users.create(ID.unique(), to);
             userId = created.$id;
+            log(`Created new user ${userId} for ${to}`);
         }
 
         const subject = `${inviterName} invited you to ${projectName} on DevRoom OS`;
@@ -76,20 +79,22 @@ export default async({ req, res, log, error }) => {
     `;
         const text = `${inviterName} invited you to join "${projectName}" on DevRoom OS as a ${role}. Sign in with ${to} to accept.`;
 
-        await messaging.createEmail(
+        const message = await messaging.createEmail(
             ID.unique(),
             subject,
-            text, [], // topics
+            html, // content — this is the body Appwrite sends
+            [], // topics
             [userId], // users
             [], // targets
             [], // cc
             [], // bcc
             [], // attachments
             false, // draft
-            html
+            true // html — tells Appwrite to treat `content` above as HTML
         );
 
-        return res.json({ success: true });
+        log(`Messaging.createEmail returned message ${message.$id} with status: ${message.status}`);
+        return res.json({ success: true, messageId: message.$id, status: message.status });
     } catch (err) {
         error(`Failed to send invite email: ${err.message}`);
         return res.json({ error: err.message || "Failed to send invite email." }, 500);

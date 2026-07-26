@@ -49,7 +49,7 @@
             "$id": "ai_chat",
             "name": "ai_chat",
             "runtime": "node-25",
-            "path": "functions/ai-chat",
+            "path": "ai-chat",
             "entrypoint": "src/main.js",
             "execute": ["any"],
             "enabled": true,
@@ -67,20 +67,20 @@
             "$id": "send_invite_email",
             "name": "send_invite_email",
             "runtime": "node-18.0",
-            "buildSpecification": "s-0.5vcpu-512mb",
+            "buildSpecification": "s-2vcpu-2gb",
             "runtimeSpecification": "s-0.5vcpu-512mb",
             "execute": ["any"],
             "events": [],
             "scopes": ["users.read", "users.write", "messages.write"],
             "schedule": "",
-            "timeout": 15,
+            "timeout": 30,
             "enabled": true,
             "logging": true,
             "entrypoint": "src/main.js",
             "commands": "npm install",
             "ignore": ["node_modules", ".npm"],
             "deploymentRetention": 0,
-            "path": "functions/send-invite-email"
+            "path": "send-invite-email"
         }
     ],
     "tablesDB": [{

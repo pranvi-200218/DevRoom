@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { Permission, Role } from "appwrite";
 import { databases, functions, appwriteConfig, ID, Query } from "../lib/appwrite";
 import { useUser } from "../context/UserContext";
+import { syncProjectAccess } from "../lib/syncProjectAccess";
 
 const { databaseId, membersCollectionId, sendInviteFunctionId } = appwriteConfig;
 
@@ -34,15 +36,23 @@ export function useMembers(projectId) {
 
     const inviteMember = useCallback(
         async({ email, role, projectName, inviterName }) => {
-            const doc = await databases.createDocument(databaseId, membersCollectionId, ID.unique(), {
-                projectId,
-                userId: null,
-                email,
-                name: email.split("@")[0],
-                role: role || "Viewer",
-                status: "pending",
-                invitedBy: user.$id,
-            });
+            const doc = await databases.createDocument(
+                databaseId,
+                membersCollectionId,
+                ID.unique(), {
+                    projectId,
+                    userId: null,
+                    email,
+                    name: email.split("@")[0],
+                    role: role || "Viewer",
+                    status: "pending",
+                    invitedBy: user.$id,
+                }, [
+                    Permission.read(Role.user(user.$id)),
+                    Permission.write(Role.user(user.$id)),
+                    Permission.delete(Role.user(user.$id)),
+                ]
+            );
             setMembers((prev) => [...prev, doc]);
 
             // Best-effort: don't fail the invite creation if the email fails to send.
@@ -50,8 +60,8 @@ export function useMembers(projectId) {
             try {
                 await functions.createExecution(
                     sendInviteFunctionId,
-                    JSON.stringify({ to: email, role: role || "Viewer", projectName, inviterName }),
-                    false
+                    JSON.stringify({ to: email, role: role || "Viewer", projectName, inviterName, projectId }),
+                    true
                 );
             } catch (err) {
                 console.warn("Invite saved, but the email failed to send:", err.message);
@@ -64,13 +74,15 @@ export function useMembers(projectId) {
     const updateRole = useCallback(async(id, role) => {
         const doc = await databases.updateDocument(databaseId, membersCollectionId, id, { role });
         setMembers((prev) => prev.map((m) => (m.$id === id ? doc : m)));
+        await syncProjectAccess(projectId).catch((err) => console.warn("Failed to sync access:", err.message));
         return doc;
-    }, []);
+    }, [projectId]);
 
     const removeMember = useCallback(async(id) => {
         await databases.deleteDocument(databaseId, membersCollectionId, id);
         setMembers((prev) => prev.filter((m) => m.$id !== id));
-    }, []);
+        await syncProjectAccess(projectId).catch((err) => console.warn("Failed to sync access:", err.message));
+    }, [projectId]);
 
     const resendInvite = useCallback(async(id, { projectName, inviterName } = {}) => {
         // Re-stamps invitedBy/updatedAt so "Sent Xh ago" reflects the resend.
@@ -83,8 +95,8 @@ export function useMembers(projectId) {
         try {
             await functions.createExecution(
                 sendInviteFunctionId,
-                JSON.stringify({ to: doc.email, role: doc.role, projectName, inviterName }),
-                false
+                JSON.stringify({ to: doc.email, role: doc.role, projectName, inviterName, projectId }),
+                true
             );
         } catch (err) {
             console.warn("Invite re-stamped, but the email failed to send:", err.message);

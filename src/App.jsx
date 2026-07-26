@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
-import NameCaptureGate from "./components/NameCaptureGate";
+import RequireAuth from "./components/RequireAuth";
 
 import Home from "./pages/Home";
 import ProjectDashboard from "./pages/ProjectDashboard";
@@ -20,7 +20,7 @@ import ProjectSettings from "./pages/ProjectSettings";
 export default function App() {
   return (
     <UserProvider>
-      <NameCaptureGate>
+      <RequireAuth>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -33,7 +33,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </NameCaptureGate>
+      </RequireAuth>
     </UserProvider>
   );
 }

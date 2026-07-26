@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Permission, Role } from "appwrite";
 import { databases, appwriteConfig, ID, Query } from "../lib/appwrite";
 import { useUser } from "../context/UserContext";
 
@@ -33,14 +34,22 @@ export function useProjects() {
 
     const createProject = useCallback(
         async({ name, description, icon }) => {
-            const doc = await databases.createDocument(databaseId, projectsCollectionId, ID.unique(), {
-                name,
-                description: description || "",
-                icon: icon || "layers",
-                status: "",
-                pinned: false,
-                ownerId: user.$id,
-            });
+            const doc = await databases.createDocument(
+                databaseId,
+                projectsCollectionId,
+                ID.unique(), {
+                    name,
+                    description: description || "",
+                    icon: icon || "layers",
+                    status: "",
+                    pinned: false,
+                    ownerId: user.$id,
+                }, [
+                    Permission.read(Role.user(user.$id)),
+                    Permission.write(Role.user(user.$id)),
+                    Permission.delete(Role.user(user.$id)),
+                ]
+            );
             setProjects((prev) => [doc, ...prev]);
             return doc;
         }, [user.$id]
