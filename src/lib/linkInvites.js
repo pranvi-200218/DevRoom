@@ -1,30 +1,21 @@
-import { databases, appwriteConfig, Query } from "./appwrite";
-import { syncProjectAccess } from "./syncProjectAccess";
-const { databaseId, membersCollectionId } = appwriteConfig;
+import { functions, appwriteConfig } from "./appwrite";
+
+// Call this once right after a user logs in or signs up. It calls the
+// send-invite-email function (which also handles linking — see its
+// action: "link" branch) using a server-side API key, so it can bypass
+// the client's own permission restrictions to find pending invites.
 export async function linkPendingInvites(userId, email) {
     if (!email) return 0;
-
-    const res = await databases.listDocuments(databaseId, membersCollectionId, [
-        Query.equal("email", email),
-        Query.equal("status", "pending"),
-        Query.limit(50),
-    ]);
-
-    const affectedProjectIds = new Set();
-
-    for (const invite of res.documents) {
-        await databases.updateDocument(databaseId, membersCollectionId, invite.$id, {
-            userId,
-            status: "active",
-        });
-        affectedProjectIds.add(invite.projectId);
+    try {
+        const execution = await functions.createExecution(
+            appwriteConfig.sendInviteFunctionId,
+            JSON.stringify({ action: "link", userId, email }),
+            false
+        );
+        const result = JSON.parse(execution.responseBody || "{}");
+        return result.linked || 0;
+    } catch (err) {
+        console.warn("Failed to link pending invites:", err.message);
+        return 0;
     }
-
-    for (const projectId of affectedProjectIds) {
-        await syncProjectAccess(projectId).catch((err) => {
-            console.warn(`Failed to sync access for project ${projectId}:`, err.message);
-        });
-    }
-
-    return affectedProjectIds.size;
 }

@@ -71,7 +71,13 @@
             "runtimeSpecification": "s-0.5vcpu-512mb",
             "execute": ["any"],
             "events": [],
-            "scopes": ["users.read", "users.write", "messages.write"],
+            "scopes": [
+                "users.read",
+                "users.write",
+                "messages.write",
+                "databases.read",
+                "databases.write"
+            ],
             "schedule": "",
             "timeout": 30,
             "enabled": true,

@@ -1,21 +1,89 @@
 // Appwrite Function — deploy this separately in the Appwrite console
-// (or via the Appwrite CLI). It sends the invite email using Appwrite's
-// own built-in Messaging feature — no third-party email API key needed.
+// (or via the Appwrite CLI). It does TWO things, based on body.action:
+//   action: "invite" (default) — sends the invite email via Messaging
+//   action: "link"             — links a newly signed-up user to any
+//                                 pending invites matching their email,
+//                                 and refreshes project permissions
+// (Combined into one function because free-tier Appwrite only allows 2
+// functions total — this reuses the send-invite-email slot instead of
+// needing a third function.)
 //
 // ONE-TIME SETUP (Appwrite Console):
-// 1. Go to Messaging → Providers → add an Email provider (SMTP, or any
-//    supported provider) and make sure it's enabled/verified.
-// 2. Go to this Function's Settings → "Execute Access" / API key section
-//    and enable a Dynamic API key for the function, with these scopes:
-//      users.read, users.write, messages.write
-//    (If you'd rather use a static key, create one under
-//    Console → Overview → API Keys with the same scopes, and set it as
-//    an environment variable named APPWRITE_API_KEY on this function.)
+// 1. Messaging → Providers → add + verify an Email provider.
+// 2. This Function's Settings → Scopes (Dynamic API key), enable:
+//      users.read, users.write, messages.write, databases.read, databases.write
 //
-// Request body (JSON): { to, role, projectName, inviterName }
-// Response body (JSON): { success: true } on success, { error: string } on failure
+// invite request body:  { to, role, projectName, inviterName, projectId }
+// link request body:    { action: "link", userId, email }
 
-import { Client, Users, Messaging, ID, Query } from "node-appwrite";
+import { Client, Users, Messaging, Databases, Permission, Role, ID, Query } from "node-appwrite";
+
+const databaseId = "devroom-db";
+const projectsCollectionId = "projects";
+const membersCollectionId = "members";
+const messagesCollectionId = "messages";
+const aiMessagesCollectionId = "ai_messages";
+const foldersCollectionId = "folders";
+const filesCollectionId = "files";
+
+function buildProjectPermissions(ownerId, members) {
+    const perms = [
+        Permission.read(Role.user(ownerId)),
+        Permission.write(Role.user(ownerId)),
+        Permission.delete(Role.user(ownerId)),
+    ];
+    for (const m of members) {
+        if (!m.userId || m.userId === ownerId) continue;
+        perms.push(Permission.read(Role.user(m.userId)));
+        if (m.role === "Editor" || m.role === "Owner") {
+            perms.push(Permission.write(Role.user(m.userId)));
+        }
+    }
+    return perms;
+}
+
+async function handleLink({ userId, email }, databases, log, error) {
+    const pending = await databases.listDocuments(databaseId, membersCollectionId, [
+        Query.equal("email", email),
+        Query.equal("status", "pending"),
+        Query.limit(50),
+    ]);
+
+    const affectedProjectIds = new Set();
+    for (const invite of pending.documents) {
+        await databases.updateDocument(databaseId, membersCollectionId, invite.$id, {
+            userId,
+            status: "active",
+        });
+        affectedProjectIds.add(invite.projectId);
+    }
+
+    for (const projectId of affectedProjectIds) {
+        const project = await databases.getDocument(databaseId, projectsCollectionId, projectId);
+        const activeMembers = await databases.listDocuments(databaseId, membersCollectionId, [
+            Query.equal("projectId", projectId),
+            Query.equal("status", "active"),
+            Query.limit(200),
+        ]);
+        const permissions = buildProjectPermissions(project.ownerId, activeMembers.documents);
+        await databases.updateDocument(databaseId, projectsCollectionId, projectId, {}, permissions);
+
+        for (const collectionId of[messagesCollectionId, aiMessagesCollectionId, foldersCollectionId, filesCollectionId]) {
+            const docs = await databases.listDocuments(databaseId, collectionId, [
+                Query.equal("projectId", projectId),
+                Query.limit(500),
+            ]);
+            await Promise.all(
+                docs.documents.map((d) =>
+                    databases.updateDocument(databaseId, collectionId, d.$id, {}, permissions).catch(() => {})
+                )
+            );
+        }
+    }
+
+    log(`Linked ${pending.documents.length} invite(s) for ${email} across ${affectedProjectIds.size} project(s)`);
+    return { linked: affectedProjectIds.size };
+}
 
 export default async({ req, res, log, error }) => {
     if (req.method !== "POST") {
@@ -29,12 +97,6 @@ export default async({ req, res, log, error }) => {
         return res.json({ error: "Invalid JSON body." }, 400);
     }
 
-    const { to, role = "Viewer", projectName = "a DevRoom OS project", inviterName = "Someone" } = body;
-    if (!to || typeof to !== "string") {
-        return res.json({ error: "Missing 'to' email address." }, 400);
-    }
-    log(`Inviting ${to} as ${role} to "${projectName}" (invited by ${inviterName})`);
-
     const apiKey = req.headers["x-appwrite-key"] || process.env.APPWRITE_API_KEY || "";
     if (!apiKey) {
         error("No API key available (dynamic key header missing and APPWRITE_API_KEY not set).");
@@ -45,6 +107,28 @@ export default async({ req, res, log, error }) => {
         .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
         .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
         .setKey(apiKey);
+
+    if (body.action === "link") {
+        const { userId, email } = body;
+        if (!userId || !email) {
+            return res.json({ error: "Missing userId or email." }, 400);
+        }
+        try {
+            const databases = new Databases(client);
+            const result = await handleLink({ userId, email }, databases, log, error);
+            return res.json(result);
+        } catch (err) {
+            error(`link action error: ${err.message}`);
+            return res.json({ error: err.message }, 500);
+        }
+    }
+
+    // ---- default: send invite email ----
+    const { to, role = "Viewer", projectName = "a DevRoom OS project", inviterName = "Someone" } = body;
+    if (!to || typeof to !== "string") {
+        return res.json({ error: "Missing 'to' email address." }, 400);
+    }
+    log(`Inviting ${to} as ${role} to "${projectName}" (invited by ${inviterName})`);
 
     const users = new Users(client);
     const messaging = new Messaging(client);
