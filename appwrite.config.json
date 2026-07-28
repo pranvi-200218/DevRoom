@@ -76,7 +76,11 @@
                 "users.write",
                 "messages.write",
                 "databases.read",
-                "databases.write"
+                "databases.write",
+                "documents.read",
+                "documents.write",
+                "rows.read",
+                "rows.write"
             ],
             "schedule": "",
             "timeout": 30,

@@ -18,7 +18,7 @@
 
 import { Client, Users, Messaging, Databases, Permission, Role, ID, Query } from "node-appwrite";
 
-const databaseId = "devroom-db";
+const databaseId = "6a4f2d95001d70a443fb";
 const projectsCollectionId = "projects";
 const membersCollectionId = "members";
 const messagesCollectionId = "messages";
