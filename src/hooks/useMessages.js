@@ -116,12 +116,13 @@ export function useMessages(projectId, channelId = "general") {
             try {
                 if (isTyping) {
                     if (!typingDocId.current) {
+                        const permissions = await getProjectPermissions(projectId);
                         const doc = await databases.createDocument(databaseId, typingCollectionId, ID.unique(), {
                             projectId,
                             channelId,
                             userId: user.$id,
                             userName: user.name,
-                        });
+                        }, permissions);
                         typingDocId.current = doc.$id;
                     } else {
                         await databases.updateDocument(databaseId, typingCollectionId, typingDocId.current, {
@@ -214,12 +215,13 @@ export function usePresence(projectId) {
                             $updatedAt: new Date().toISOString(),
                         });
                     } else {
+                        const permissions = await getProjectPermissions(projectId);
                         const doc = await databases.createDocument(databaseId, presenceCollectionId, ID.unique(), {
                             projectId,
                             userId: user.$id,
                             userName: user.name,
                             avatarUrl: user.avatarUrl,
-                        });
+                        }, permissions);
                         presenceDocId.current = doc.$id;
                     }
                 } else {
