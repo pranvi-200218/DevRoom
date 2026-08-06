@@ -1,47 +1,62 @@
 import { Permission, Role } from "appwrite";
 import { databases, appwriteConfig } from "./appwrite";
 
-// Builds the permission list for a project and everything that belongs to
-// it (messages, ai_messages, folders, files). This is the single source of
-// truth for "who can see/edit this project's data" at the Appwrite level —
-// not just in the UI.
+// IMPORTANT Appwrite rule: a session can only grant a ROLE-SCOPED permission
+// (e.g. `team:ID/owner`, `team:ID/editor`) if the CURRENT session itself
+// holds that exact role. It can always grant the UNSCOPED `team:ID` (just
+// "any member of this team"), regardless of which role it personally has.
 //
-// - Owner: read + write + delete
-// - Editor: read + write
-// - Viewer: read only
-// - Pending invites (no real account yet, userId is null) are skipped —
-//   they get access once they sign up and linkPendingInvites() runs.
-export function buildProjectPermissions({ ownerId, members }) {
-    const perms = [];
+// That means: if we stamp `write(team:ID/editor)` onto a document's
+// permissions, only a session that is itself an editor can successfully
+// create that document — an owner-session trying to create the same kind of
+// document with that same permission list gets a 401, because the owner
+// doesn't hold the "editor" role. Since messages/files/etc. get created by
+// whichever member happens to be using the app at that moment (owner,
+// editor, or viewer), role-scoped grants break for whoever isn't that role.
+//
+// So: the PROJECT document itself is only ever created once, by whoever is
+// about to become its owner — for that one write, owner-scoped permissions
+// are safe. Everything that hangs off the project (messages, ai_messages,
+// files, folders, typing, presence, and the members list) gets created by
+// arbitrary team members over time, so those use the unscoped team role —
+// any member can read/write. Fine-grained "viewers can't post" enforcement
+// stays a UI-level concern rather than an Appwrite-level one.
 
-    if (ownerId) {
-        perms.push(
-            Permission.read(Role.user(ownerId)),
-            Permission.write(Role.user(ownerId)),
-            Permission.delete(Role.user(ownerId))
-        );
-    }
-
-    for (const m of members) {
-        if (!m.userId || m.userId === ownerId) continue; // no account yet, or already the owner
-        perms.push(Permission.read(Role.user(m.userId)));
-        if (m.role === "Editor" || m.role === "Owner") {
-            perms.push(Permission.write(Role.user(m.userId)));
-        }
-    }
-
-    return perms;
+// Permissions for the PROJECT document itself. Always created by the owner,
+// so owner-scoped write/delete is safe here.
+export function buildProjectDocPermissions(teamId) {
+    if (!teamId) return [];
+    return [
+        Permission.read(Role.team(teamId)),
+        Permission.write(Role.team(teamId, "owner")),
+        Permission.delete(Role.team(teamId, "owner")),
+    ];
 }
 
-// Fetches a project's current $permissions so a newly-created message,
-// ai_message, folder, or file can inherit the same access immediately —
-// no need to re-derive it from the members list on every single send.
-// Falls back to an empty array (collection-level default) if the fetch fails,
-// so a permissions hiccup never blocks someone from sending a message.
+// Permissions for everything that belongs to a project (messages,
+// ai_messages, folders, files, typing, presence, members). Unscoped team
+// role, so it works no matter which member (owner/editor/viewer) is the one
+// actually creating the document at that moment.
+export function buildChildPermissions(teamId) {
+    if (!teamId) return [];
+    return [
+        Permission.read(Role.team(teamId)),
+        Permission.write(Role.team(teamId)),
+    ];
+}
+
+// Backwards-compatible name some call sites still import — same as the
+// project-doc variant, kept so nothing breaks if referenced directly.
+export const buildProjectPermissions = buildProjectDocPermissions;
+
+// Fetches a project's teamId and returns the permission set that should be
+// used for anything created underneath it (messages, ai_messages, files,
+// folders, typing, presence). Falls back to an empty array if the fetch
+// fails, so a permissions hiccup never blocks someone from sending a message.
 export async function getProjectPermissions(projectId) {
     try {
         const project = await databases.getDocument(appwriteConfig.databaseId, appwriteConfig.projectsCollectionId, projectId);
-        return project.$permissions || [];
+        return buildChildPermissions(project.teamId);
     } catch (err) {
         console.warn(`Could not fetch permissions for project ${projectId}:`, err.message);
         return [];

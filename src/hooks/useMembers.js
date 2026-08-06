@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Permission, Role } from "appwrite";
 import { databases, functions, appwriteConfig, ID, Query } from "../lib/appwrite";
 import { useUser } from "../context/UserContext";
-import { syncProjectAccess } from "../lib/syncProjectAccess";
+import { getProjectPermissions } from "../lib/permissions";
 
 const { databaseId, membersCollectionId, sendInviteFunctionId } = appwriteConfig;
 
@@ -36,6 +35,10 @@ export function useMembers(projectId) {
 
     const inviteMember = useCallback(
         async({ email, role, projectName, inviterName }) => {
+            // Team-based permissions (same as project/messages/files) so every
+            // existing team member can see the members list, not just whoever
+            // sent this particular invite.
+            const permissions = await getProjectPermissions(projectId);
             const doc = await databases.createDocument(
                 databaseId,
                 membersCollectionId,
@@ -47,11 +50,8 @@ export function useMembers(projectId) {
                     role: role || "Viewer",
                     status: "pending",
                     invitedBy: user.$id,
-                }, [
-                    Permission.read(Role.user(user.$id)),
-                    Permission.write(Role.user(user.$id)),
-                    Permission.delete(Role.user(user.$id)),
-                ]
+                },
+                permissions
             );
             setMembers((prev) => [...prev, doc]);
 
@@ -74,15 +74,42 @@ export function useMembers(projectId) {
     const updateRole = useCallback(async(id, role) => {
         const doc = await databases.updateDocument(databaseId, membersCollectionId, id, { role });
         setMembers((prev) => prev.map((m) => (m.$id === id ? doc : m)));
-        await syncProjectAccess(projectId).catch((err) => console.warn("Failed to sync access:", err.message));
+
+        // Changing someone's role also has to change their role inside the
+        // project's Appwrite Team (owner/editor/viewer) — that's what
+        // actually controls their write/delete access at the Appwrite level.
+        // Only active members with a linked account have a team membership.
+        if (doc.userId) {
+            try {
+                await functions.createExecution(
+                    sendInviteFunctionId,
+                    JSON.stringify({ action: "updateMemberRole", projectId, userId: doc.userId, role }),
+                    false
+                );
+            } catch (err) {
+                console.warn("Role saved, but syncing team access failed:", err.message);
+            }
+        }
         return doc;
     }, [projectId]);
 
     const removeMember = useCallback(async(id) => {
+        const target = members.find((m) => m.$id === id);
         await databases.deleteDocument(databaseId, membersCollectionId, id);
         setMembers((prev) => prev.filter((m) => m.$id !== id));
-        await syncProjectAccess(projectId).catch((err) => console.warn("Failed to sync access:", err.message));
-    }, [projectId]);
+
+        if (target?.userId) {
+            try {
+                await functions.createExecution(
+                    sendInviteFunctionId,
+                    JSON.stringify({ action: "removeMember", projectId, userId: target.userId }),
+                    false
+                );
+            } catch (err) {
+                console.warn("Member removed, but revoking team access failed:", err.message);
+            }
+        }
+    }, [projectId, members]);
 
     const resendInvite = useCallback(async(id, { projectName, inviterName } = {}) => {
         // Re-stamps invitedBy/updatedAt so "Sent Xh ago" reflects the resend.

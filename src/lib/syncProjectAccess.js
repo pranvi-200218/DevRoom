@@ -1,5 +1,5 @@
 import { databases, appwriteConfig, Query } from "./appwrite";
-import { buildProjectPermissions } from "./permissions";
+import { buildProjectDocPermissions, buildChildPermissions } from "./permissions";
 
 const {
     databaseId,
@@ -11,33 +11,26 @@ const {
     filesCollectionId,
 } = appwriteConfig;
 
-// Call this any time membership changes for a project: an invite gets
-// accepted, a role changes, or a member is removed. It recalculates who
-// should have access and re-applies that access at the Appwrite permission
-// level on the project doc AND every existing message/file/folder that
-// belongs to it (so newly-added members can see history, and removed
-// members immediately lose access even to things Appwrite is now caching).
-//
-// Requires "Document Security" to be enabled on each of these collections
-// in the Appwrite Console — otherwise these per-document permissions are
-// ignored and the collection-level permissions apply instead.
+// One-off repair tool: re-applies team-based permissions to a project doc
+// and everything that belongs to it. The project doc itself gets
+// owner-scoped write/delete (safe — only ever re-applied by this script,
+// running with elevated/owner context); everything else gets the unscoped
+// "any team member" permission set, since those documents get created by
+// whichever member happens to be active at the time (owner, editor, or
+// viewer), and a role-scoped grant only works for the role the creating
+// session actually holds.
 export async function syncProjectAccess(projectId) {
     const project = await databases.getDocument(databaseId, projectsCollectionId, projectId);
+    if (!project.teamId) {
+        throw new Error(`Project ${projectId} has no teamId — run the Teams migration first.`);
+    }
 
-    const membersRes = await databases.listDocuments(databaseId, membersCollectionId, [
-        Query.equal("projectId", projectId),
-        Query.equal("status", "active"),
-        Query.limit(200),
-    ]);
+    const projectPermissions = buildProjectDocPermissions(project.teamId);
+    const childPermissions = buildChildPermissions(project.teamId);
 
-    const permissions = buildProjectPermissions({ ownerId: project.ownerId, members: membersRes.documents });
-    console.log("syncProjectAccess: computed permissions ->", JSON.stringify(permissions));
-    console.log("syncProjectAccess: project.ownerId ->", JSON.stringify(project.ownerId));
-    console.log("syncProjectAccess: active members ->", membersRes.documents.map((m) => ({ id: m.$id, userId: m.userId, role: m.role })));
+    await databases.updateDocument(databaseId, projectsCollectionId, projectId, {}, projectPermissions);
 
-    await databases.updateDocument(databaseId, projectsCollectionId, projectId, {}, permissions);
-
-    const collectionsToSync = [messagesCollectionId, aiMessagesCollectionId, foldersCollectionId, filesCollectionId];
+    const collectionsToSync = [messagesCollectionId, aiMessagesCollectionId, foldersCollectionId, filesCollectionId, membersCollectionId];
 
     for (const collectionId of collectionsToSync) {
         const res = await databases.listDocuments(databaseId, collectionId, [
@@ -46,10 +39,10 @@ export async function syncProjectAccess(projectId) {
         ]);
         await Promise.all(
             res.documents.map((doc) =>
-                databases.updateDocument(databaseId, collectionId, doc.$id, {}, permissions).catch(() => {})
+                databases.updateDocument(databaseId, collectionId, doc.$id, {}, childPermissions).catch(() => {})
             )
         );
     }
 
-    return permissions;
+    return { projectPermissions, childPermissions };
 }

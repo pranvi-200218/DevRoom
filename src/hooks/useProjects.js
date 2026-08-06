@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Permission, Role } from "appwrite";
-import { databases, appwriteConfig, ID, Query } from "../lib/appwrite";
+import { databases, teams, appwriteConfig, ID, Query } from "../lib/appwrite";
 import { useUser } from "../context/UserContext";
+import { buildProjectPermissions } from "../lib/permissions";
 
 const { databaseId, projectsCollectionId } = appwriteConfig;
 
@@ -34,6 +34,14 @@ export function useProjects() {
 
     const createProject = useCallback(
         async({ name, description, icon }) => {
+            // Each project gets its own Appwrite Team. The creator becomes the
+            // team's first member (role "owner") automatically. Team-based
+            // permissions (Role.team(teamId, role)) are the only way a client
+            // session can grant access to OTHER users — granting a specific
+            // Role.user(otherUserId) permission from a client session is
+            // rejected by Appwrite with a 401 ("Permissions must be one of...").
+            const team = await teams.create(ID.unique(), name);
+
             const doc = await databases.createDocument(
                 databaseId,
                 projectsCollectionId,
@@ -44,11 +52,9 @@ export function useProjects() {
                     status: "",
                     pinned: false,
                     ownerId: user.$id,
-                }, [
-                    Permission.read(Role.user(user.$id)),
-                    Permission.write(Role.user(user.$id)),
-                    Permission.delete(Role.user(user.$id)),
-                ]
+                    teamId: team.$id,
+                },
+                buildProjectPermissions(team.$id)
             );
             setProjects((prev) => [doc, ...prev]);
             return doc;
