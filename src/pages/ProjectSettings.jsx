@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProject, useProjects } from "../hooks/useProjects";
+import { useUser } from "../context/UserContext";
+import { syncProjectAccess } from "../lib/syncProjectAccess";
 
 const ICONS = ["layers", "api", "terminal", "auto_awesome", "database", "rocket_launch", "bolt"];
 
 export default function ProjectSettings() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const currentUser = useUser();
   const { project, loading, error } = useProject(projectId);
   const { updateProject, deleteProject } = useProjects();
+
+  const isOwner = project?.ownerId === currentUser.$id;
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -18,6 +23,21 @@ export default function ProjectSettings() {
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [repairing, setRepairing] = useState(false);
+  const [repairResult, setRepairResult] = useState(null);
+
+  async function handleRepairAccess() {
+    setRepairing(true);
+    setRepairResult(null);
+    try {
+      await syncProjectAccess(projectId);
+      setRepairResult("Access permissions repaired successfully.");
+    } catch (err) {
+      setRepairResult(`Repair failed: ${err.message}`);
+    } finally {
+      setRepairing(false);
+    }
+  }
 
   if (project && !initialized) {
     setName(project.name || "");
@@ -47,6 +67,7 @@ export default function ProjectSettings() {
   }
 
   async function handleDelete() {
+    if (!isOwner) return;
     if (!window.confirm(`Delete "${project.name}"? This can't be undone.`)) return;
     setDeleting(true);
     try {
@@ -146,16 +167,38 @@ export default function ProjectSettings() {
         </div>
       </form>
 
+      <div className="glass rounded-xl p-6 mb-8">
+        <h3 className="font-bold text-sm mb-1 text-white">Repair Access</h3>
+        <p className="text-on-surface-variant text-xs mb-4">
+          If chat, AI, or files aren't loading for members (a leftover permissions issue), use this to
+          force-recompute who can access this project and its data.
+        </p>
+        <button
+          onClick={handleRepairAccess}
+          disabled={repairing}
+          className="border border-primary/40 text-primary px-4 py-2 rounded text-sm font-bold hover:bg-primary/10 transition-colors disabled:opacity-50"
+        >
+          {repairing ? "Repairing…" : "Repair Access"}
+        </button>
+        {repairResult && <p className="text-xs mt-3 text-on-surface-variant">{repairResult}</p>}
+      </div>
+
       <div className="glass rounded-xl p-6 border border-error/20">
         <h3 className="text-error font-bold text-sm mb-1">Danger Zone</h3>
         <p className="text-on-surface-variant text-xs mb-4">
           Deleting a project removes it permanently. It does not currently delete its messages, files, or members —
           those become orphaned records tied to a project that no longer exists.
         </p>
+        {!isOwner && (
+          <p className="text-on-surface-variant text-xs mb-3 italic">
+            Only the project owner can delete this project.
+          </p>
+        )}
         <button
           onClick={handleDelete}
-          disabled={deleting}
-          className="border border-error/40 text-error px-4 py-2 rounded text-sm font-bold hover:bg-error/10 transition-colors disabled:opacity-50"
+          disabled={deleting || !isOwner}
+          title={!isOwner ? "Only the project owner can delete this project." : undefined}
+          className="border border-error/40 text-error px-4 py-2 rounded text-sm font-bold hover:bg-error/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {deleting ? "Deleting…" : "Delete Project"}
         </button>

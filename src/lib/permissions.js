@@ -12,11 +12,15 @@ import { databases, appwriteConfig } from "./appwrite";
 // - Pending invites (no real account yet, userId is null) are skipped —
 //   they get access once they sign up and linkPendingInvites() runs.
 export function buildProjectPermissions({ ownerId, members }) {
-    const perms = [
-        Permission.read(Role.user(ownerId)),
-        Permission.write(Role.user(ownerId)),
-        Permission.delete(Role.user(ownerId)),
-    ];
+    const perms = [];
+
+    if (ownerId) {
+        perms.push(
+            Permission.read(Role.user(ownerId)),
+            Permission.write(Role.user(ownerId)),
+            Permission.delete(Role.user(ownerId))
+        );
+    }
 
     for (const m of members) {
         if (!m.userId || m.userId === ownerId) continue; // no account yet, or already the owner

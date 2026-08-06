@@ -51,6 +51,7 @@ export function useAIChat(projectId, room) {
             setError(null);
             try {
                 const permissions = await getProjectPermissions(projectId);
+                console.log("PERMISSIONS DEBUG:", permissions);
                 const userDoc = await databases.createDocument(databaseId, aiMessagesCollectionId, ID.unique(), {
                     projectId,
                     room,

@@ -104,8 +104,8 @@ export default async({ req, res, log, error }) => {
     }
 
     const client = new Client()
-        .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
-        .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+        .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT || "https://cloud.appwrite.io/v1")
+        .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID || "6a4f2a8c00296c358f65")
         .setKey(apiKey);
 
     if (body.action === "link") {

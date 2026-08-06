@@ -31,6 +31,9 @@ export async function syncProjectAccess(projectId) {
     ]);
 
     const permissions = buildProjectPermissions({ ownerId: project.ownerId, members: membersRes.documents });
+    console.log("syncProjectAccess: computed permissions ->", JSON.stringify(permissions));
+    console.log("syncProjectAccess: project.ownerId ->", JSON.stringify(project.ownerId));
+    console.log("syncProjectAccess: active members ->", membersRes.documents.map((m) => ({ id: m.$id, userId: m.userId, role: m.role })));
 
     await databases.updateDocument(databaseId, projectsCollectionId, projectId, {}, permissions);
 
