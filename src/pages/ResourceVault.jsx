@@ -2,13 +2,17 @@ import { useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useResources } from "../hooks/useResources";
 import { useProject } from "../hooks/useProjects";
+import { useUser, useAuth } from "../context/UserContext";
 import { relativeTime, formatBytes, isRecent, fileVisual } from "../lib/format";
+import NotificationBell from "../components/NotificationBell";
 
 export default function ResourceVault() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { project } = useProject(projectId);
-  const [currentFolder, setCurrentFolder] = useState(null); // {id, name} | null
+  const currentUser = useUser();
+  const { logout } = useAuth();
+  const [currentFolder, setCurrentFolder] = useState(null);
   const {
     folders,
     files,
@@ -63,12 +67,16 @@ export default function ResourceVault() {
     }
   }
 
+  async function handleLogout() {
+    if (!window.confirm("Log out of DevRoom OS?")) return;
+    await logout();
+  }
+
   const recentFiles = files.filter((f) => isRecent(f.$createdAt));
   const olderFiles = files.filter((f) => !isRecent(f.$createdAt));
 
   return (
     <>
-    {/* Sidebar Navigation */}
     <aside className="w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant/10 flex flex-col h-full py-6 px-4 z-50">
         <div className="mb-10 px-2">
             <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary">DevRoom OS</h1>
@@ -83,17 +91,9 @@ export default function ResourceVault() {
                 <span className="material-symbols-outlined">smart_toy</span>
                 <span>AI Assistant</span>
             </div>
-            <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm">
-                <span className="material-symbols-outlined">description</span>
-                <span>Docs</span>
-            </div>
             <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-medium rounded-lg font-body-sm text-body-sm">
                 <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>folder_open</span>
                 <span>Resources</span>
-            </div>
-            <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm">
-                <span className="material-symbols-outlined">send</span>
-                <span>Submissions</span>
             </div>
         </nav>
         <div className="pt-6 border-t border-outline-variant/10 space-y-1">
@@ -101,15 +101,13 @@ export default function ResourceVault() {
                 <span className="material-symbols-outlined">settings</span>
                 <span>Settings</span>
             </div>
-            <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm" title="Notifications aren't built yet">
-                <span className="material-symbols-outlined">notifications</span>
-                <span>Notifications</span>
+            <div onClick={handleLogout} className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors font-body-sm text-body-sm">
+                <span className="material-symbols-outlined">logout</span>
+                <span>Log out</span>
             </div>
         </div>
     </aside>
-    {/* Main Content Canvas */}
     <main className="ml-sidebar-width min-h-screen bg-background">
-        {/* Top Navigation */}
         <header className="flex justify-between items-center h-16 px-gutter sticky top-0 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 z-40">
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
@@ -129,14 +127,19 @@ export default function ResourceVault() {
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-outline-variant/50 p-2" title="Workspace">account_tree</span>
                     <span className="material-symbols-outlined text-primary/60 p-2" title="All changes saved">cloud_done</span>
+                    <NotificationBell />
                     <div className="w-8 h-8 rounded-full bg-surface-variant ml-2 overflow-hidden border border-outline-variant/20">
-                        <img className="w-full h-full object-cover" data-alt="Close-up portrait of a professional software engineer with glasses, looking focused against a dark background with subtle blue light bokeh. Professional and modern tech photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDost60FcqyQ_ogOSUxuBKb8AdC5Iu599437Ke-Ng-cV9Rn0GoZhG2FFRbhJjK6IqxiDxKeOVDJWJedB2P_XlD64oMOMvHRdTxlZFcKd_QkYqpmTAhKG4GIMPeeiROi4w-iu0cXRvma2nOkWw9hkuRfPTY40XIDnWIZXcklMoZ7KKMrSeqAla1RVea9N80eyOlrtGbbGqhE_kAH3-Rf4_50OqclhEk6t_Av2HYTC3hfWpsZMM3twvFGMAehaq7NkJwa8F6FFWDGiFo"
-                        />
+                        {currentUser.avatarUrl ? (
+                          <img className="w-full h-full object-cover" alt={currentUser.name} src={currentUser.avatarUrl} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-primary font-bold text-xs">
+                            {(currentUser.name || "?")[0].toUpperCase()}
+                          </div>
+                        )}
                     </div>
                 </div>
             </div>
         </header>
-        {/* View Controls & Breadcrumbs */}
         <section className="px-gutter pt-8 pb-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
                 <h2 className="font-headline-md text-headline-md font-bold text-on-surface">
@@ -149,18 +152,18 @@ export default function ResourceVault() {
                 )}
                 <div className="flex items-center gap-2 bg-surface-container-lowest p-1 rounded-lg border border-outline-variant/10">
                     <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-surface-variant text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
-<span className="material-symbols-outlined text-[20px]">grid_view</span>
-</button>
+                      <span className="material-symbols-outlined text-[20px]">grid_view</span>
+                    </button>
                     <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-surface-variant text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
-<span className="material-symbols-outlined text-[20px]">list</span>
-</button>
+                      <span className="material-symbols-outlined text-[20px]">list</span>
+                    </button>
                 </div>
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-colors shadow-lg shadow-primary/10 active:scale-95 disabled:opacity-50">
-<span className="material-symbols-outlined text-[18px]">upload_file</span>
+              <span className="material-symbols-outlined text-[18px]">upload_file</span>
                 {uploading ? "UPLOADING…" : "UPLOAD RESOURCE"}
             </button>
             <input
@@ -171,9 +174,7 @@ export default function ResourceVault() {
               onChange={(e) => handleFiles(e.target.files)}
             />
         </section>
-        {/* Content Area */}
         <div className="px-gutter pb-12 space-y-8">
-            {/* Folder Hierarchy (Horizontal Scroll) */}
             <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
 {!currentFolder && folders.map((folder) => (
   <div
@@ -202,7 +203,6 @@ export default function ResourceVault() {
   </div>
 )}
             </div>
-            {/* Drag & Drop Zone */}
             <div
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
@@ -213,7 +213,6 @@ export default function ResourceVault() {
                 <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">cloud_upload</span>
                 <p className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface">Drag files here to upload or <span className="text-primary font-medium underline">browse</span></p>
             </div>
-            {/* Recent & Files Grid */}
             <div>
                 <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Recent Uploads
@@ -280,7 +279,6 @@ export default function ResourceVault() {
                 </div>
                 )}
             </div>
-            {/* Secondary List for older files */}
             <div className="mt-12">
                 <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-4">Internal Assets</h3>
                 {!loading && !error && olderFiles.length === 0 && (
@@ -309,7 +307,6 @@ export default function ResourceVault() {
             </div>
         </div>
     </main>
-    {/* Floating Tooltip/Status Bar */}
     <div className="fixed bottom-6 right-6 glass-panel-vault px-6 py-3 rounded-full flex items-center gap-6 shadow-2xl z-50 border-primary/20">
         <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#8aebff]"></div>

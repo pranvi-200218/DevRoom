@@ -7,6 +7,7 @@ import { useMembers } from "../hooks/useMembers";
 import { useResources } from "../hooks/useResources";
 import { useUser } from "../context/UserContext";
 import { relativeTime, fileVisual } from "../lib/format";
+import NotificationBell from "../components/NotificationBell";
 
 const ROOM_DOTS = {
   frontend: "bg-cyan-400",
@@ -214,6 +215,7 @@ export default function AIWorkspace() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <NotificationBell />
           <div className="relative group">
             <input
               value={searchTerm}

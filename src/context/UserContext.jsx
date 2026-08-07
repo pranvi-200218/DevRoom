@@ -1,25 +1,27 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { account, storage, appwriteConfig, ID } from "../lib/appwrite";
+import { account, ID } from "../lib/appwrite";
 import { linkPendingInvites } from "../lib/linkInvites";
-
-const AVATAR_KEY_PREFIX = "devroom_avatar_url_"; // keyed per real user $id
+import { getProfile, setMyAvatar, clearMyAvatar } from "../lib/profiles";
 
 const UserContext = createContext(null);
 
 export function UserProvider({ children }) {
-  const [authUser, setAuthUser] = useState(null); // Appwrite Account object, or null
-  const [loading, setLoading] = useState(true); // still checking session on first load
+  const [authUser, setAuthUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [avatarUrl, setAvatarUrlState] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  // On mount, check if there's already a valid session (so refresh doesn't log you out)
+  async function loadAvatar(userId) {
+    const profile = await getProfile(userId);
+    setAvatarUrlState(profile?.avatarUrl || null);
+  }
+
   useEffect(() => {
     account
       .get()
-      .then((u) => {
+      .then(async (u) => {
         setAuthUser(u);
-        setAvatarUrlState(localStorage.getItem(AVATAR_KEY_PREFIX + u.$id) || null);
-        // Best-effort: don't block app load if this fails.
+        await loadAvatar(u.$id);
         linkPendingInvites(u.$id, u.email).catch(() => {});
       })
       .catch(() => setAuthUser(null))
@@ -31,7 +33,7 @@ export function UserProvider({ children }) {
     await account.createEmailPasswordSession(email, password);
     const u = await account.get();
     setAuthUser(u);
-    setAvatarUrlState(localStorage.getItem(AVATAR_KEY_PREFIX + u.$id) || null);
+    await loadAvatar(u.$id);
     await linkPendingInvites(u.$id, u.email).catch(() => {});
     return u;
   }, []);
@@ -40,7 +42,7 @@ export function UserProvider({ children }) {
     await account.createEmailPasswordSession(email, password);
     const u = await account.get();
     setAuthUser(u);
-    setAvatarUrlState(localStorage.getItem(AVATAR_KEY_PREFIX + u.$id) || null);
+    await loadAvatar(u.$id);
     await linkPendingInvites(u.$id, u.email).catch(() => {});
     return u;
   }, []);
@@ -55,19 +57,17 @@ export function UserProvider({ children }) {
     if (!file || !authUser) return;
     setUploadingAvatar(true);
     try {
-      const uploaded = await storage.createFile(appwriteConfig.avatarsBucketId, ID.unique(), file);
-      const url = storage.getFileView(appwriteConfig.avatarsBucketId, uploaded.$id).toString();
-      localStorage.setItem(AVATAR_KEY_PREFIX + authUser.$id, url);
-      setAvatarUrlState(url);
-      return url;
+      const doc = await setMyAvatar(authUser.$id, file);
+      setAvatarUrlState(doc.avatarUrl);
+      return doc.avatarUrl;
     } finally {
       setUploadingAvatar(false);
     }
   }
 
-  function clearAvatar() {
+  async function clearAvatar() {
     if (!authUser) return;
-    localStorage.removeItem(AVATAR_KEY_PREFIX + authUser.$id);
+    await clearMyAvatar(authUser.$id);
     setAvatarUrlState(null);
   }
 
@@ -76,7 +76,6 @@ export function UserProvider({ children }) {
         $id: authUser.$id,
         name: authUser.name || "Team Member",
         email: authUser.email,
-        tier: "Pro Tier",
         avatarUrl,
         uploadingAvatar,
         setAvatarFile,
@@ -92,8 +91,6 @@ export function UserProvider({ children }) {
   );
 }
 
-// Returns the current user object directly. Only call this inside routes
-// that are wrapped in <RequireAuth> where a logged-in user is guaranteed.
 export function useUser() {
   const ctx = useContext(UserContext);
   if (!ctx) throw new Error("useUser must be used within UserProvider");
@@ -101,8 +98,6 @@ export function useUser() {
   return ctx.user;
 }
 
-// Use this in login/signup screens and route guards — gives access to
-// loading state and the signup/login/logout actions, without throwing.
 export function useAuth() {
   const ctx = useContext(UserContext);
   if (!ctx) throw new Error("useAuth must be used within UserProvider");
