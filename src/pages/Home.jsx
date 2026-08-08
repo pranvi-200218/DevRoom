@@ -72,6 +72,19 @@ export default function Home() {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+  useEffect(() => {
+    function onVisibility() {
+      if (document.visibilityState === "visible") refetch();
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", refetch);
+    const interval = setInterval(refetch, 45000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", refetch);
+      clearInterval(interval);
+    };
+  }, [refetch]);
 
   function formatUptime(totalSeconds) {
     const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");

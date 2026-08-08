@@ -6,36 +6,51 @@
 //                                   and adds them to each project's Team
 //   action: "updateMemberRole"   — changes someone's role in a project's Team
 //   action: "removeMember"       — removes someone from a project's Team
-// (Combined into one function because free-tier Appwrite only allows 2
-// functions total — this reuses the send-invite-email slot instead of
-// needing a third function.)
-//
-// Access is now Team-based: each project has an Appwrite Team (project.teamId),
-// and document permissions reference Role.team(teamId, role) rather than
-// individual Role.user(userId) entries. A browser session can't grant
-// Role.user(otherUserId) permissions to someone else (Appwrite rejects that
-// with a 401 "Permissions must be one of..."), so adding/removing/promoting
-// people in the Team has to happen server-side, with an API key — that's
-// what this function does.
 //
 // ONE-TIME SETUP (Appwrite Console):
 // 1. Messaging → Providers → add + verify an Email provider.
 // 2. This Function's Settings → Scopes (Dynamic API key), enable:
 //      users.read, users.write, messages.write, databases.read, databases.write, teams.read, teams.write
-//
-// invite request body:            { to, role, projectName, inviterName, projectId }
-// link request body:              { action: "link", userId, email }
-// updateMemberRole request body:  { action: "updateMemberRole", projectId, userId, role }
-// removeMember request body:      { action: "removeMember", projectId, userId }
 
-import { Client, Users, Messaging, Databases, Teams, ID, Query } from "node-appwrite";
+import { Client, Users, Messaging, Databases, Teams, Permission, Role, ID, Query } from "node-appwrite";
 
 const databaseId = "6a4f2d95001d70a443fb";
 const projectsCollectionId = "projects";
 const membersCollectionId = "members";
+const activityCollectionId = "activity";
+const notificationsCollectionId = "notifications";
 
-// Maps our app-level member role ("Owner" / "Editor" / "Viewer") to the
-// Appwrite Team role string used in Role.team(teamId, role) permissions.
+async function logActivity(databases, projectId, type, { actorName, detail } = {}, errorLog = console.warn) {
+    try {
+        await databases.createDocument(databaseId, activityCollectionId, ID.unique(), {
+            projectId,
+            type,
+            actorName: actorName || "Someone",
+            detail: detail || "",
+        });
+    } catch (err) {
+        errorLog(`Failed to log activity: ${err.message}`);
+    }
+}
+
+async function notifyUser(databases, userId, { type, message, projectId }, errorLog = console.warn) {
+    try {
+        await databases.createDocument(databaseId, notificationsCollectionId, ID.unique(), {
+            userId,
+            type,
+            message,
+            projectId: projectId || null,
+            read: false,
+        }, [
+            Permission.read(Role.user(userId)),
+            Permission.update(Role.user(userId)),
+            Permission.delete(Role.user(userId)),
+        ]);
+    } catch (err) {
+        errorLog(`Failed to notify ${userId}: ${err.message}`);
+    }
+}
+
 function teamRoleFor(memberRole) {
     if (memberRole === "Owner") return "owner";
     if (memberRole === "Editor") return "editor";
@@ -59,20 +74,21 @@ async function handleLink({ userId, email }, databases, teams, log, error) {
         try {
             const project = await databases.getDocument(databaseId, projectsCollectionId, invite.projectId);
             if (project.teamId) {
-                // Server SDK + API key: membership is added directly, no
-                // email-confirmation round-trip needed (that's only required
-                // when a Client SDK sends the invite).
                 await teams.createMembership({
                     teamId: project.teamId,
                     roles: [teamRoleFor(invite.role)],
                     userId,
                 });
+                await logActivity(databases, invite.projectId, "member_joined", { actorName: email }, error);
+                await notifyUser(databases, userId, {
+                    type: "invited",
+                    message: `You joined "${project.name}" as ${invite.role}`,
+                    projectId: invite.projectId,
+                }, error);
             } else {
                 error(`Project ${invite.projectId} has no teamId — skipping team membership for ${email}. Run the Teams migration.`);
             }
         } catch (err) {
-            // Already a member, or some other non-fatal hiccup — don't block
-            // the rest of the invites over one project's team issue.
             error(`Could not add ${email} to team for project ${invite.projectId}: ${err.message}`);
         }
 
@@ -101,6 +117,12 @@ async function handleUpdateMemberRole({ projectId, userId, role }, databases, te
         roles: [teamRoleFor(role)],
     });
 
+    await notifyUser(databases, userId, {
+        type: "role_changed",
+        message: `Your role in "${project.name}" changed to ${role}`,
+        projectId,
+    });
+
     log(`Updated ${userId}'s team role to ${teamRoleFor(role)} for project ${projectId}`);
     return { success: true };
 }
@@ -119,6 +141,12 @@ async function handleRemoveMember({ projectId, userId }, databases, teams, log) 
             membershipId: memberships.memberships[0].$id,
         });
     }
+
+    await notifyUser(databases, userId, {
+        type: "removed",
+        message: `You were removed from "${project.name}"`,
+        projectId: null,
+    });
 
     log(`Removed ${userId} from team for project ${projectId}`);
     return { success: true };
@@ -206,9 +234,6 @@ export default async({ req, res, log, error }) => {
     const messaging = new Messaging(client);
 
     try {
-        // Appwrite Messaging sends to existing Appwrite users, not raw email
-        // strings — so we find-or-create a bare user account for the invitee.
-        // This gives them an email "target" that Messaging can deliver to.
         let userId;
         const existing = await users.list([Query.equal("email", to)]);
         if (existing.total > 0) {
@@ -233,20 +258,13 @@ export default async({ req, res, log, error }) => {
         </p>
       </div>
     `;
-        const text = `${inviterName} invited you to join "${projectName}" on DevRoom OS as a ${role}. Sign in with ${to} to accept.`;
 
         const message = await messaging.createEmail(
             ID.unique(),
             subject,
-            html, // content — this is the body Appwrite sends
-            [], // topics
-            [userId], // users
-            [], // targets
-            [], // cc
-            [], // bcc
-            [], // attachments
-            false, // draft
-            true // html — tells Appwrite to treat `content` above as HTML
+            html, [], [userId], [], [], [], [],
+            false,
+            true
         );
 
         log(`Messaging.createEmail returned message ${message.$id} with status: ${message.status}`);

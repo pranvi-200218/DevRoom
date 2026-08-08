@@ -27,6 +27,27 @@ export function UserProvider({ children }) {
       .catch(() => setAuthUser(null))
       .finally(() => setLoading(false));
   }, []);
+  useEffect(() => {
+    if (!authUser) return;
+
+    function recheck() {
+      linkPendingInvites(authUser.$id, authUser.email).catch(() => {});
+    }
+
+    function onVisibility() {
+      if (document.visibilityState === "visible") recheck();
+    }
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", recheck);
+    const interval = setInterval(recheck, 45000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", recheck);
+      clearInterval(interval);
+    };
+  }, [authUser]);
 
   const signup = useCallback(async (email, password, name) => {
     await account.create(ID.unique(), email, password, name);
