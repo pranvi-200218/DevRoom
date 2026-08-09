@@ -42,11 +42,16 @@ export default function Home() {
   } = useProjects();
 
   const mostRecentProject = allProjects[0] || null;
+  const updatedThisWeek = allProjects.filter((p) => {
+    const days = (Date.now() - new Date(p.$updatedAt).getTime()) / 86400000;
+    return days <= 7;
+  }).length;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
   const [uptimeSeconds, setUptimeSeconds] = useState(0);
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
   const searchInputRef = useRef(null);
   const gridRef = useRef(null);
 
@@ -63,6 +68,12 @@ export default function Home() {
       { opacity: 1, y: 0, duration: 0.45, stagger: 0.05, ease: "power2.out" }
     );
   }, [loading, viewMode]);
+
+  // Track when the project list last finished loading, so the footer can
+  // show a real "synced Xs ago" instead of a decorative fake stat.
+  useEffect(() => {
+    if (!loading) setLastSyncedAt(new Date());
+  }, [loading]);
 
   // Live session uptime, counted from when Home mounted
   useEffect(() => {
@@ -479,32 +490,30 @@ export default function Home() {
             </div>
           </div>
           <section className="mt-gutter grid grid-cols-1 md:grid-cols-3 gap-gutter">
-            <div className="glass p-6 rounded-xl flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                <span className="material-symbols-outlined" data-icon="bolt">bolt</span>
-              </div>
-              <div>
-                <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">System Performance</p>
-                <p className="text-xl font-bold">99.2% <span className="text-xs text-primary font-normal">Optimal</span></p>
-              </div>
+            <div className="glass rounded-xl p-5 border-l-2 border-l-primary">
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Workspaces</p>
+              <p className="text-2xl font-code-sm text-on-surface mt-1">
+                {String(allProjects.length).padStart(2, "0")}
+                <span className="text-xs font-body-sm text-on-surface-variant ml-2">
+                  {pinnedProjects.length > 0 ? `${pinnedProjects.length} pinned` : "none pinned"}
+                </span>
+              </p>
             </div>
-            <div className="glass p-6 rounded-xl flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-secondary/10 text-secondary">
-                <span className="material-symbols-outlined" data-icon="schedule">schedule</span>
-              </div>
-              <div>
-                <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Build Time</p>
-                <p className="text-xl font-bold">14s <span className="text-xs text-secondary font-normal">-2s avg</span></p>
-              </div>
+            <div className="glass rounded-xl p-5 border-l-2 border-l-secondary">
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Last Touched</p>
+              <p className="text-2xl font-code-sm text-on-surface mt-1 truncate">
+                {mostRecentProject ? relativeTime(mostRecentProject.$updatedAt) : "—"}
+                {mostRecentProject && (
+                  <span className="text-xs font-body-sm text-on-surface-variant ml-2 truncate">{mostRecentProject.name}</span>
+                )}
+              </p>
             </div>
-            <div className="glass p-6 rounded-xl flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-on-tertiary-container/10 text-tertiary">
-                <span className="material-symbols-outlined" data-icon="bug_report">bug_report</span>
-              </div>
-              <div>
-                <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Active Issues</p>
-                <p className="text-xl font-bold">0 <span className="text-xs text-on-surface-variant font-normal">Clean slate</span></p>
-              </div>
+            <div className="glass rounded-xl p-5 border-l-2 border-l-tertiary">
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Moved This Week</p>
+              <p className="text-2xl font-code-sm text-on-surface mt-1">
+                {String(updatedThisWeek).padStart(2, "0")}
+                <span className="text-xs font-body-sm text-on-surface-variant ml-2">of {allProjects.length} total</span>
+              </p>
             </div>
           </section>
         </div>
@@ -514,13 +523,13 @@ export default function Home() {
               <span className={`w-1.5 h-1.5 rounded-full ${error ? "bg-error" : loading ? "bg-secondary animate-pulse" : "bg-primary"}`}></span>
               <span>{error ? "Error" : loading ? "Syncing" : "Ready"}</span>
             </div>
-            <span>Uptime: {formatUptime(uptimeSeconds)}</span>
+            <span>Session: {formatUptime(uptimeSeconds)}</span>
           </div>
           <div className="flex items-center gap-6">
-            <span>Branch: main</span>
+            <span>Synced {lastSyncedAt ? relativeTime(lastSyncedAt) : "—"}</span>
             <span className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]" data-icon="cloud">cloud</span>
-              Europe West 1
+              <span className="material-symbols-outlined text-[14px]" data-icon="person">person</span>
+              {user?.name || user?.email || "—"}
             </span>
           </div>
         </footer>
