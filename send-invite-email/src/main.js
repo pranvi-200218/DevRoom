@@ -6,6 +6,7 @@
 //                                   and adds them to each project's Team
 //   action: "updateMemberRole"   — changes someone's role in a project's Team
 //   action: "removeMember"       — removes someone from a project's Team
+//   action: "joinViaLink"        — self-join via a shareable invite link
 //
 // ONE-TIME SETUP (Appwrite Console):
 // 1. Messaging → Providers → add + verify an Email provider.
@@ -51,6 +52,67 @@ async function notifyUser(databases, userId, { type, message, projectId }, error
     }
 }
 
+async function handleJoinViaLink({ projectId, userId, email, name }, databases, teams, log, error) {
+    const project = await databases.getDocument(databaseId, projectsCollectionId, projectId);
+    if (!project.teamId) throw new Error(`Project ${projectId} has no teamId. Run the Teams migration first.`);
+
+    const existing = await databases.listDocuments(databaseId, membersCollectionId, [
+        Query.equal("projectId", projectId),
+        Query.equal("userId", userId),
+        Query.limit(1),
+    ]);
+    if (existing.documents.length > 0 && existing.documents[0].status === "active") {
+        log(`${email} is already an active member of ${projectId}`);
+        return { alreadyMember: true };
+    }
+
+    const role = "Viewer";
+    const childPermissions = [
+        Permission.read(Role.team(project.teamId)),
+        Permission.update(Role.team(project.teamId)),
+        Permission.delete(Role.team(project.teamId)),
+    ];
+
+    // Team membership FIRST — same reasoning as handleLink: don't mark the
+    // member record "active" until Appwrite actually granted team access.
+    await teams.createMembership(project.teamId, [teamRoleFor(role)], undefined, userId);
+
+    if (existing.documents.length > 0) {
+        await databases.updateDocument(databaseId, membersCollectionId, existing.documents[0].$id, {
+            userId,
+            status: "active",
+        });
+    } else {
+        await databases.createDocument(databaseId, membersCollectionId, ID.unique(), {
+            projectId,
+            userId,
+            email,
+            name: name || email.split("@")[0],
+            role,
+            status: "active",
+            invitedBy: null,
+        }, childPermissions);
+    }
+
+    await logActivity(databases, projectId, "member_joined", { actorName: name || email }, error);
+    await notifyUser(databases, userId, {
+        type: "invited",
+        message: `You joined "${project.name}" as ${role}`,
+        projectId,
+    }, error);
+
+    if (project.ownerId) {
+        await notifyUser(databases, project.ownerId, {
+            type: "invited",
+            message: `${name || email} joined "${project.name}" via invite link`,
+            projectId,
+        }, error);
+    }
+
+    log(`${email} joined ${projectId} via invite link as ${role}`);
+    return { joined: true, role };
+}
+
 function teamRoleFor(memberRole) {
     if (memberRole === "Owner") return "owner";
     if (memberRole === "Editor") return "editor";
@@ -66,33 +128,36 @@ async function handleLink({ userId, email }, databases, teams, log, error) {
 
     let linkedCount = 0;
     for (const invite of pending.documents) {
-        await databases.updateDocument(databaseId, membersCollectionId, invite.$id, {
-            userId,
-            status: "active",
-        });
-
         try {
             const project = await databases.getDocument(databaseId, projectsCollectionId, invite.projectId);
-            if (project.teamId) {
-                await teams.createMembership({
-                    teamId: project.teamId,
-                    roles: [teamRoleFor(invite.role)],
-                    userId,
-                });
-                await logActivity(databases, invite.projectId, "member_joined", { actorName: email }, error);
-                await notifyUser(databases, userId, {
-                    type: "invited",
-                    message: `You joined "${project.name}" as ${invite.role}`,
-                    projectId: invite.projectId,
-                }, error);
-            } else {
+            if (!project.teamId) {
                 error(`Project ${invite.projectId} has no teamId — skipping team membership for ${email}. Run the Teams migration.`);
+                continue;
             }
-        } catch (err) {
-            error(`Could not add ${email} to team for project ${invite.projectId}: ${err.message}`);
-        }
 
-        linkedCount++;
+            // Team membership FIRST — this is the step that actually grants
+            // access. Only flip status to "active" (and notify) once it has
+            // genuinely succeeded, so a scope/permission failure here never
+            // leaves a member record that *looks* active but has no real
+            // team access, and never gone silently unnoticed.
+            await teams.createMembership(project.teamId, [teamRoleFor(invite.role)], undefined, userId);
+
+            await databases.updateDocument(databaseId, membersCollectionId, invite.$id, {
+                userId,
+                status: "active",
+            });
+
+            await logActivity(databases, invite.projectId, "member_joined", { actorName: email }, error);
+            await notifyUser(databases, userId, {
+                type: "invited",
+                message: `You joined "${project.name}" as ${invite.role}`,
+                projectId: invite.projectId,
+            }, error);
+
+            linkedCount++;
+        } catch (err) {
+            error(`Could not link ${email} to project ${invite.projectId}: ${err.message}`);
+        }
     }
 
     log(`Linked ${linkedCount} invite(s) for ${email}`);
@@ -103,19 +168,12 @@ async function handleUpdateMemberRole({ projectId, userId, role }, databases, te
     const project = await databases.getDocument(databaseId, projectsCollectionId, projectId);
     if (!project.teamId) throw new Error(`Project ${projectId} has no teamId.`);
 
-    const memberships = await teams.listMemberships({
-        teamId: project.teamId,
-        queries: [Query.equal("userId", userId)],
-    });
+    const memberships = await teams.listMemberships(project.teamId, [Query.equal("userId", userId)]);
     if (memberships.memberships.length === 0) {
         throw new Error(`${userId} is not a member of this project's team.`);
     }
 
-    await teams.updateMembership({
-        teamId: project.teamId,
-        membershipId: memberships.memberships[0].$id,
-        roles: [teamRoleFor(role)],
-    });
+    await teams.updateMembership(project.teamId, memberships.memberships[0].$id, [teamRoleFor(role)]);
 
     await notifyUser(databases, userId, {
         type: "role_changed",
@@ -131,15 +189,9 @@ async function handleRemoveMember({ projectId, userId }, databases, teams, log) 
     const project = await databases.getDocument(databaseId, projectsCollectionId, projectId);
     if (!project.teamId) throw new Error(`Project ${projectId} has no teamId.`);
 
-    const memberships = await teams.listMemberships({
-        teamId: project.teamId,
-        queries: [Query.equal("userId", userId)],
-    });
+    const memberships = await teams.listMemberships(project.teamId, [Query.equal("userId", userId)]);
     if (memberships.memberships.length > 0) {
-        await teams.deleteMembership({
-            teamId: project.teamId,
-            membershipId: memberships.memberships[0].$id,
-        });
+        await teams.deleteMembership(project.teamId, memberships.memberships[0].$id);
     }
 
     await notifyUser(databases, userId, {
@@ -174,6 +226,22 @@ export default async({ req, res, log, error }) => {
         .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
         .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
         .setKey(apiKey);
+
+    if (body.action === "joinViaLink") {
+        const { projectId, userId, email, name } = body;
+        if (!projectId || !userId || !email) {
+            return res.json({ error: "Missing projectId, userId, or email." }, 400);
+        }
+        try {
+            const databases = new Databases(client);
+            const teams = new Teams(client);
+            const result = await handleJoinViaLink({ projectId, userId, email, name }, databases, teams, log, error);
+            return res.json(result);
+        } catch (err) {
+            error(`joinViaLink action error: ${err.message}`);
+            return res.json({ error: err.message }, 500);
+        }
+    }
 
     if (body.action === "link") {
         const { userId, email } = body;

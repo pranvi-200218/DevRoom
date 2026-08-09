@@ -80,7 +80,9 @@
                 "documents.read",
                 "documents.write",
                 "rows.read",
-                "rows.write"
+                "rows.write",
+                "teams.read",
+                "teams.write"
             ],
             "schedule": "",
             "timeout": 30,

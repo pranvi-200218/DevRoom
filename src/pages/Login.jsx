@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/UserContext";
+import { account } from "../lib/appwrite";
 
 export default function Login() {
   const { signup, login } = useAuth();
@@ -9,10 +10,12 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  const [recoverySent, setRecoverySent] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setFormError(null);
+    setRecoverySent(false);
     if (!email.trim() || !password) {
       setFormError("Email and password are required.");
       return;
@@ -30,7 +33,20 @@ export default function Login() {
       }
       // On success, UserProvider's auth state updates and the app re-renders past this screen.
     } catch (err) {
-      setFormError(err.message || "Something went wrong. Please try again.");
+      // This account was pre-created (no password) by the invite-email function
+      // when someone invited this email to a project. Real signup will always
+      // 409 here — send them a recovery email to set a password instead.
+      if (mode === "signup" && (err.type === "user_already_exists" || err.code === 409)) {
+        try {
+          await account.createRecovery(email.trim(), `${window.location.origin}/reset-password`);
+          setRecoverySent(true);
+          setFormError(null);
+        } catch (recErr) {
+          setFormError(recErr.message || "Couldn't send the set-password email.");
+        }
+      } else {
+        setFormError(err.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -75,6 +91,11 @@ export default function Login() {
             className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg px-4 py-3 text-sm text-center text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-primary"
           />
           {formError && <p className="text-error text-xs">{formError}</p>}
+          {recoverySent && (
+            <p className="text-primary text-xs">
+              You were already invited — check your inbox for an email to set your password.
+            </p>
+          )}
           <button
             type="submit"
             disabled={submitting}

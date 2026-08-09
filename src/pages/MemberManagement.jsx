@@ -3,7 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMembers } from "../hooks/useMembers";
 import { useProject } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
+import { useProfiles } from "../hooks/useProfiles";
 import { relativeTime } from "../lib/format";
+import NotificationBell from "../components/NotificationBell";
 
 const ROLES = ["Owner", "Editor", "Viewer"];
 
@@ -13,7 +15,14 @@ function initials(nameOrEmail) {
   return (parts[0]?.[0] || "?").toUpperCase() + (parts[1]?.[0] || "").toUpperCase();
 }
 
-function Avatar({ label }) {
+function Avatar({ label, avatarUrl }) {
+  if (avatarUrl) {
+    return (
+      <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+        <img src={avatarUrl} alt={label} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
   return (
     <div className="w-10 h-10 rounded-lg bg-surface-container-highest border border-white/10 flex items-center justify-center text-sm font-bold text-primary">
       {initials(label)}
@@ -36,18 +45,32 @@ export default function MemberManagement() {
     removeMember,
     resendInvite,
   } = useMembers(projectId);
+  const profiles = useProfiles(activeMembers.map((m) => m.userId));
 
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("Editor");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const [memberSearch, setMemberSearch] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const filteredMembers = activeMembers.filter((m) => {
     const term = memberSearch.trim().toLowerCase();
     if (!term) return true;
     return (m.name || "").toLowerCase().includes(term) || (m.email || "").toLowerCase().includes(term);
   });
+
+  async function handleCopyInviteLink() {
+    const link = `${window.location.origin}/join/${projectId}`;
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      window.prompt("Copy this invite link:", link);
+      return;
+    }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  }
 
   async function handleInvite(e) {
     e.preventDefault();
@@ -97,7 +120,6 @@ export default function MemberManagement() {
   }
   return (
     <>
-    {/* SideNavBar */}
     <aside className="w-sidebar-width h-full fixed left-0 top-0 bg-surface-dim border-r border-white/5 flex flex-col p-4 z-50">
         <div className="mb-8 px-2">
             <h1 className="font-headline-md text-headline-md font-bold text-primary">DevRoom</h1>
@@ -128,12 +150,11 @@ export default function MemberManagement() {
                 />
                 <div className="overflow-hidden">
                     <p className="text-body-sm font-medium truncate">{currentUser.name}</p>
-                    <p className="text-[11px] text-on-surface-variant truncate">{currentUser.tier}</p>
+                    <p className="text-[11px] text-on-surface-variant truncate">{currentUser.email}</p>
                 </div>
             </div>
         </div>
     </aside>
-    {/* TopNavBar */}
     <header className="h-16 fixed top-0 right-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-gutter ml-sidebar-width w-[calc(100%-260px)]">
         <div className="flex items-center gap-4 flex-1">
             <div className="relative w-full max-w-md group focus-within:ring-1 focus-within:ring-primary rounded-lg transition-all duration-200">
@@ -148,9 +169,7 @@ export default function MemberManagement() {
             </div>
         </div>
         <div className="flex items-center gap-4">
-            <button onClick={() => alert("No new notifications yet.")} className="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" title="Notifications">
-<span className="material-symbols-outlined">notifications</span>
-</button>
+            <NotificationBell />
             <button onClick={() => navigate(`/project/${projectId}/settings`)} className="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 flex items-center justify-center overflow-hidden" title={currentUser.name}>
                 <img className="w-full h-full object-cover" alt={currentUser.name}
                     src={currentUser.avatarUrl}
@@ -158,10 +177,8 @@ export default function MemberManagement() {
             </button>
         </div>
     </header>
-    {/* Main Content Canvas */}
     <main className="ml-sidebar-width pt-16 min-h-screen bg-background">
         <div className="max-w-container-max mx-auto px-margin-desktop py-10">
-            {/* Header Section */}
             <div className="mb-10">
                 <div className="flex items-end gap-3 mb-2">
                     <h2 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">Member Management</h2>
@@ -170,10 +187,8 @@ export default function MemberManagement() {
                 <p className="text-on-surface-variant font-body-lg max-w-2xl">Manage your team's access, invite new collaborators, and control permission levels for this workspace.</p>
             </div>
             <div className="grid grid-cols-12 gap-8">
-                {/* Invite Section - Left Column (Bento Style) */}
                 <div className="col-span-12 lg:col-span-4 space-y-8">
                     <section className="glass-panel-members rounded-xl p-6 shadow-2xl relative overflow-hidden group">
-                        {/* Decorative glow */}
                         <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
                         <div className="relative z-10">
                             <h3 className="text-body-lg font-semibold text-on-surface mb-6 flex items-center gap-2">
@@ -207,6 +222,22 @@ export default function MemberManagement() {
                                     </button>
                                 </div>
                             </form>
+                            <div className="flex items-center gap-3 my-6">
+                                <div className="h-px flex-1 bg-outline-variant/20"></div>
+                                <span className="text-[10px] text-outline uppercase tracking-widest">or</span>
+                                <div className="h-px flex-1 bg-outline-variant/20"></div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleCopyInviteLink}
+                              className="w-full py-3 bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg font-bold text-label-caps tracking-widest uppercase hover:border-primary/40 hover:text-primary active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">{linkCopied ? "check" : "link"}</span>
+                              {linkCopied ? "Link Copied" : "Copy Invite Link"}
+                            </button>
+                            <p className="text-[10px] text-on-surface-variant mt-2 text-center">
+                              Anyone with this link can join as a Viewer. You can promote them afterwards.
+                            </p>
                         </div>
                     </section>
                     <section className="glass-panel-members rounded-xl p-6">
@@ -234,7 +265,6 @@ export default function MemberManagement() {
                         </div>
                     </section>
                 </div>
-                {/* Current Members List - Right Column */}
                 <div className="col-span-12 lg:col-span-8">
                     <div className="glass-panel-members rounded-xl overflow-hidden shadow-2xl">
                         <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
@@ -269,7 +299,7 @@ export default function MemberManagement() {
   <tr key={member.$id} className="hover:bg-white/5 transition-colors group">
       <td className="px-6 py-4">
           <div className="flex items-center gap-3">
-              <Avatar label={member.name || member.email} />
+              <Avatar label={member.name || member.email} avatarUrl={profiles[member.userId]?.avatarUrl} />
               <div>
                   <p className="font-medium text-on-surface flex items-center gap-2">
                       {member.name || member.email}

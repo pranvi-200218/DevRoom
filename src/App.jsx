@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider } from "./context/UserContext";
 import RequireAuth from "./components/RequireAuth";
-
+import JoinProject from "./pages/JoinProject";
 import Home from "./pages/Home";
 import ProjectDashboard from "./pages/ProjectDashboard";
 import MemberManagement from "./pages/MemberManagement";
@@ -9,6 +9,7 @@ import TeamChat from "./pages/TeamChat";
 import AIWorkspace from "./pages/AIWorkspace";
 import ResourceVault from "./pages/ResourceVault";
 import ProjectSettings from "./pages/ProjectSettings";
+import ResetPassword from "./pages/ResetPassword";
 
 // NOTE: each page below still renders its own full sidebar + topbar exactly
 // as authored in its source mockup (they weren't byte-identical to each
@@ -30,6 +31,8 @@ export default function App() {
             <Route path="/project/:projectId/ai" element={<AIWorkspace />} />
             <Route path="/project/:projectId/resources" element={<ResourceVault />} />
             <Route path="/project/:projectId/settings" element={<ProjectSettings />} />
+            <Route path="/join/:projectId" element={<JoinProject />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
