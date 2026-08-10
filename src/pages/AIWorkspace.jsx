@@ -8,7 +8,7 @@ import { useResources } from "../hooks/useResources";
 import { useUser } from "../context/UserContext";
 import { relativeTime, fileVisual } from "../lib/format";
 import NotificationBell from "../components/NotificationBell";
-
+import { mi } from "../lib/icons";
 const ROOM_DOTS = {
   frontend: "bg-cyan-400",
   backend: "bg-purple-400",

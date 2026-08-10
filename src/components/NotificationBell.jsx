@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../hooks/useNotifications";
 import { notificationIcon } from "../lib/notifications";
 import { relativeTime } from "../lib/format";
-
+import { mi } from "../lib/icons";
 export default function NotificationBell() {
     const navigate = useNavigate();
     const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
@@ -31,7 +31,7 @@ export default function NotificationBell() {
                 className="relative w-9 h-9 flex items-center justify-center rounded-full text-outline-variant/60 hover:text-primary hover:bg-primary/10 transition-colors"
                 title="Notifications"
             >
-                <span className="material-symbols-outlined text-[20px]">notifications</span>
+                <i className={`${mi("notifications")} text-[20px]`} />
                 {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span>
                 )}
@@ -62,9 +62,7 @@ export default function NotificationBell() {
                                 n.read ? "opacity-60" : ""
                             }`}
                         >
-                            <span className="material-symbols-outlined text-primary text-[18px] mt-0.5">
-                                {notificationIcon(n.type)}
-                            </span>
+                            <i className={`${mi(notificationIcon(n.type))} text-primary text-[18px] mt-0.5`} />
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm text-on-surface leading-snug">{n.message}</p>
                                 <p className="text-[10px] text-outline mt-1">{relativeTime(n.$createdAt)}</p>

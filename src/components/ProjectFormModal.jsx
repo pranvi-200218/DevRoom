@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import { mi } from "../lib/icons";
 const ICONS = ["layers", "api", "terminal", "auto_awesome", "database", "rocket_launch", "bolt"];
 
 export default function ProjectFormModal({ initial, onClose, onSubmit, submitLabel }) {
@@ -91,7 +91,7 @@ export default function ProjectFormModal({ initial, onClose, onSubmit, submitLab
                       : "border-outline-variant/20 text-on-surface-variant hover:text-on-surface"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[20px]">{i}</span>
+                  <i className={`${mi(i)} text-[20px]`} />
                 </button>
               ))}
             </div>

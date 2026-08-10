@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useProject, useProjects } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
 import { syncProjectAccess } from "../lib/syncProjectAccess";
+import { mi } from "../lib/icons";
 
 const ICONS = ["layers", "api", "terminal", "auto_awesome", "database", "rocket_launch", "bolt"];
 
@@ -105,7 +106,7 @@ export default function ProjectSettings() {
   return (
     <div className="ml-sidebar-width min-h-screen bg-background px-gutter py-10 max-w-2xl">
       <button onClick={() => navigate(`/project/${projectId}`)} className="text-xs text-primary hover:underline flex items-center gap-1 mb-6">
-        <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back to {project.name}
+        <i className={`${mi("arrow_back")} text-[14px]`} /> Back to {project.name}
       </button>
 
       <h1 className="font-headline-lg text-headline-lg text-white mb-1">Project Settings</h1>
@@ -115,7 +116,7 @@ export default function ProjectSettings() {
         onClick={() => navigate(`/project/${projectId}/members`)}
         className="flex items-center gap-2 text-xs text-on-surface-variant hover:text-primary mb-8 transition-colors"
       >
-        <span className="material-symbols-outlined text-[16px]">group</span>
+        <i className={`${mi("group")} text-[14px]`} />
         Manage members →
       </button>
 
@@ -149,7 +150,7 @@ export default function ProjectSettings() {
                   icon === i ? "border-primary bg-primary/10 text-primary" : "border-outline-variant/20 text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                <span className="material-symbols-outlined text-[20px]">{i}</span>
+                <i className={`${mi(i)} text-[20px]`} />
               </button>
             ))}
           </div>

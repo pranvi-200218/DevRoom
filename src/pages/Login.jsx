@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/UserContext";
 import { account } from "../lib/appwrite";
+import { mi } from "../lib/icons";
 
 export default function Login() {
   const { signup, login } = useAuth();
@@ -31,11 +32,7 @@ export default function Login() {
       } else {
         await login(email.trim(), password);
       }
-      // On success, UserProvider's auth state updates and the app re-renders past this screen.
     } catch (err) {
-      // This account was pre-created (no password) by the invite-email function
-      // when someone invited this email to a project. Real signup will always
-      // 409 here — send them a recovery email to set a password instead.
       if (mode === "signup" && (err.type === "user_already_exists" || err.code === 409)) {
         try {
           await account.createRecovery(email.trim(), `${window.location.origin}/reset-password`);
@@ -56,7 +53,7 @@ export default function Login() {
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
       <div className="glass rounded-xl p-8 w-full max-w-sm primary-glow text-center">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <span className="material-symbols-outlined text-primary text-[24px]">waving_hand</span>
+          <i className={`${mi("waving_hand")} text-primary text-[22px]`} />
         </div>
         <h2 className="font-headline-md text-headline-md text-white mb-2">
           {mode === "login" ? "Welcome back" : "Create your account"}
