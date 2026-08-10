@@ -1,18 +1,3 @@
-// Appwrite Function — deploy this separately in the Appwrite console
-// (or via the Appwrite CLI). It does several things, based on body.action:
-//   action: "invite" (default)   — sends the invite email via Messaging
-//   action: "link"               — links a newly signed-up user to any
-//                                   pending invites matching their email,
-//                                   and adds them to each project's Team
-//   action: "updateMemberRole"   — changes someone's role in a project's Team
-//   action: "removeMember"       — removes someone from a project's Team
-//   action: "joinViaLink"        — self-join via a shareable invite link
-//
-// ONE-TIME SETUP (Appwrite Console):
-// 1. Messaging → Providers → add + verify an Email provider.
-// 2. This Function's Settings → Scopes (Dynamic API key), enable:
-//      users.read, users.write, messages.write, databases.read, databases.write, teams.read, teams.write
-
 import { Client, Users, Messaging, Databases, Teams, Permission, Role, ID, Query } from "node-appwrite";
 
 const databaseId = "6a4f2d95001d70a443fb";

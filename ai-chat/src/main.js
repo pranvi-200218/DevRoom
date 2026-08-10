@@ -1,13 +1,3 @@
-// Appwrite Function — deploy this separately in the Appwrite console
-// (or via the Appwrite CLI). It keeps the Groq API key server-side.
-//
-// Required environment variable on this function (set in Appwrite console,
-// not in the frontend's .env): GROQ_API_KEY
-// Get a free key at https://console.groq.com
-//
-// Request body (JSON): { prompt: string, history: [{role, content}], room: string }
-// Response body (JSON): { reply: string } on success, { error: string } on failure
-
 export default async({ req, res, log, error }) => {
     if (req.method !== "POST") {
         return res.json({ error: "Use POST." }, 405);
