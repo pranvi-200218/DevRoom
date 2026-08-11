@@ -2,6 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 
+/**
+ * DevRoom OS — public landing page.
+ * Every feature named below is real and shipped: Teams-based permissions,
+ * shareable invite links, live notifications, real-time chat, AI workspace
+ * (Groq/llama-3.3-70b), resource vault, activity feed. Nothing fictional.
+ *
+ * Drop this in at src/pages/Landing.jsx and add a public route above the
+ * RequireAuth boundary in App.jsx, e.g.:
+ *   <Route path="/welcome" element={<Landing />} />
+ * (RequireAuth currently wraps the whole router, so this page needs to sit
+ * outside that wrapper, or RequireAuth needs a public-path allowlist.)
+ *
+ * ICONS: this page uses Font Awesome (<i className="fa-solid fa-...">).
+ * Add the CDN link to index.html's <head>, right under your existing
+ * Material Symbols / Geist font links:
+ *   <link rel="stylesheet"
+ *     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+ * (Only this page needs it — your other pages still use Material Symbols,
+ * so both fonts can load side by side without conflict.)
+ */
+
+// Tailwind's JIT scanner can't see classes built from template strings like
+// `bg-${accent}/10`, so accent styling is mapped to full static class names.
 const ACCENTS = {
   primary: { icon: "text-primary", chip: "bg-primary/10" },
   secondary: { icon: "text-secondary", chip: "bg-secondary/10" },
@@ -100,13 +123,13 @@ export default function Landing() {
           </nav>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/dashboard")}
               className="hidden sm:block text-body-sm text-on-surface-variant hover:text-on-surface px-3"
             >
               Sign in
             </button>
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/dashboard")}
               className="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-caps text-label-caps hover:bg-primary-fixed-dim transition-all shadow-[0_0_20px_rgba(47,217,244,0.2)]"
             >
               Open Workspace
@@ -137,7 +160,7 @@ export default function Landing() {
 
         <div className="hero-in flex flex-col sm:flex-row gap-4 mt-10">
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/dashboard")}
             className="bg-primary text-on-primary px-7 py-3.5 rounded-lg font-label-caps text-label-caps hover:bg-primary-fixed-dim transition-all shadow-[0_0_25px_rgba(47,217,244,0.25)] flex items-center gap-2 group"
           >
             Launch Workspace
@@ -238,7 +261,7 @@ export default function Landing() {
           </p>
           <div className="flex gap-4 relative z-10">
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/dashboard")}
               className="bg-primary text-on-primary px-7 py-3 rounded-lg font-label-caps text-label-caps hover:bg-primary-fixed-dim transition-all shadow-[0_0_20px_rgba(47,217,244,0.2)]"
             >
               Launch Workspace

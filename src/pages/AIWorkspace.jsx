@@ -102,31 +102,18 @@ export default function AIWorkspace() {
               onClick={() => navigate(`/project/${projectId}/chat`)}
               className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors cursor-pointer active:scale-95 duration-200"
             >
-              <span
-                className="material-symbols-outlined text-[20px]"
-                data-icon="chat"
-              >
-                chat
-              </span>
+              <i className={`${mi("chat")} text-[20px]`} />
               <span>Chat</span>
             </a>
             <a className="flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-medium rounded-lg cursor-pointer transition-all active:scale-95 duration-200">
-              <span
-                className="material-symbols-outlined text-[20px]"
-                data-icon="smart_toy"
-                data-weight="fill"
-              >
-                smart_toy
-              </span>
+              <i className={`${mi("smart_toy")} text-[20px]`} />
               <span>AI Assistant</span>
             </a>
             <a
               onClick={() => navigate(`/project/${projectId}/resources`)}
               className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors cursor-pointer active:scale-95 duration-200"
             >
-              <span className="material-symbols-outlined text-[20px]">
-                folder_open
-              </span>
+              <i className={`${mi("folder_open")} text-[20px]`} />
               <span>Resources</span>
             </a>
           </div>
@@ -162,12 +149,7 @@ export default function AIWorkspace() {
             onClick={() => navigate(`/project/${projectId}/settings`)}
             className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 rounded-lg transition-colors cursor-pointer"
           >
-            <span
-              className="material-symbols-outlined text-[20px]"
-              data-icon="settings"
-            >
-              settings
-            </span>
+            <i className={`${mi("settings")} text-[20px]`} />
             <span>Settings</span>
           </a>
           <div className="flex items-center gap-3 px-3 py-3 mt-4 glass-panel-ai rounded-xl">
@@ -194,12 +176,7 @@ export default function AIWorkspace() {
             <span className="text-on-surface-variant font-label-caps text-label-caps uppercase">
               Workspace
             </span>
-            <span
-              className="material-symbols-outlined text-[16px] text-outline"
-              data-icon="chevron_right"
-            >
-              chevron_right
-            </span>
+            <i className={`${mi("chevron_right")} text-[16px] text-outline`} />
             <span className="text-primary font-bold font-label-caps text-label-caps uppercase">
               {activeRoom?.label} Room
             </span>
@@ -224,22 +201,17 @@ export default function AIWorkspace() {
               placeholder="Search this conversation..."
               type="text"
             />
-            <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-outline group-focus-within:text-primary"
-              data-icon="search"
-            >
-              search
-            </span>
+            <i className={`${mi("search")} absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-outline group-focus-within:text-primary`} />
           </div>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
             className="w-10 h-10 flex items-center justify-center text-outline-variant/50 hover:text-primary transition-colors"
             title="Back to Projects"
           >
-            <span className="material-symbols-outlined">account_tree</span>
+            <i className={mi("account_tree")} />
           </button>
-          <span
-            className={`material-symbols-outlined w-10 h-10 flex items-center justify-center ${error ? "text-error" : loading || sending ? "text-outline-variant" : "text-primary/60"}`}
+          <i
+            className={`${mi(error ? "cloud_off" : loading || sending ? "cloud_sync" : "cloud_done")} w-10 h-10 flex items-center justify-center ${error ? "text-error" : loading || sending ? "text-outline-variant" : "text-primary/60"}`}
             title={
               error
                 ? "Sync failed"
@@ -249,13 +221,7 @@ export default function AIWorkspace() {
                     ? "Sending…"
                     : "All changes saved"
             }
-          >
-            {error
-              ? "cloud_off"
-              : loading || sending
-                ? "cloud_sync"
-                : "cloud_done"}
-          </span>
+          />
         </div>
       </header>
       {/* Main Workspace Layout */}
@@ -305,9 +271,7 @@ export default function AIWorkspace() {
                       onClick={() => togglePin(msg.$id)}
                       className={`absolute -top-2 -left-2 w-6 h-6 rounded-full bg-surface-container-high border border-outline-variant/20 flex items-center justify-center transition-opacity ${msg.pinned ? "opacity-100 text-primary" : "opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-primary"}`}
                     >
-                      <span className="material-symbols-outlined text-[14px]">
-                        push_pin
-                      </span>
+                      <i className={`${mi("push_pin")} text-[14px]`} />
                     </button>
                   </div>
                   <span className="text-[10px] text-outline mt-2 font-label-caps">
@@ -321,12 +285,7 @@ export default function AIWorkspace() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 border border-primary/40 shadow-[0_0_15px_rgba(138,235,255,0.2)]">
-                      <span
-                        className="material-symbols-outlined text-primary text-[20px]"
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        smart_toy
-                      </span>
+                      <i className={`${mi("smart_toy")} text-primary text-[20px]`} />
                     </div>
                     <div className="flex-1 space-y-4 min-w-0">
                       <div className="prose prose-invert max-w-none text-body-lg font-body-lg leading-relaxed text-on-surface-variant">
@@ -361,9 +320,7 @@ export default function AIWorkspace() {
                           onClick={() => togglePin(msg.$id)}
                           className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-[12px] ${msg.pinned ? "border-primary/50 text-primary bg-primary/5" : "border-outline-variant/30 hover:bg-primary/5 hover:border-primary/50 text-outline hover:text-primary"}`}
                         >
-                          <span className="material-symbols-outlined text-[16px]">
-                            push_pin
-                          </span>
+                          <i className={`${mi("push_pin")} text-[16px]`} />
                           {msg.pinned ? "Pinned" : "Pin"}
                         </button>
                       </div>
@@ -375,9 +332,7 @@ export default function AIWorkspace() {
             {sending && (
               <div className="max-w-4xl mx-auto w-full flex items-center gap-4 text-on-surface-variant text-sm">
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 border border-primary/40 animate-pulse">
-                  <span className="material-symbols-outlined text-primary text-[20px]">
-                    smart_toy
-                  </span>
+                  <i className={`${mi("smart_toy")} text-primary text-[20px]`} />
                 </div>
                 Thinking…
               </div>
@@ -405,12 +360,7 @@ export default function AIWorkspace() {
                     disabled={sending}
                     className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center hover:shadow-[0_0_20px_rgba(138,235,255,0.4)] transition-all active:scale-95 disabled:opacity-50"
                   >
-                    <span
-                      className="material-symbols-outlined"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      send
-                    </span>
+                    <i className={mi("send")} />
                   </button>
                 </div>
               </div>
@@ -429,13 +379,7 @@ export default function AIWorkspace() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="material-symbols-outlined text-primary text-[18px]"
-                    data-icon="keep"
-                    data-weight="fill"
-                  >
-                    keep
-                  </span>
+                  <i className={`${mi("push_pin")} text-primary text-[18px]`} />
                   <h3 className="font-bold text-[11px] uppercase tracking-widest text-on-surface">
                     Pinned Prompts
                   </h3>
@@ -463,9 +407,7 @@ export default function AIWorkspace() {
                       <span className="text-[9px] text-outline px-1.5 py-0.5 rounded bg-surface-variant/30">
                         {activeRoom?.label?.toUpperCase()}
                       </span>
-                      <span className="material-symbols-outlined text-[14px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">
-                        open_in_new
-                      </span>
+                      <i className={`${mi("open_in_new")} text-[14px] text-outline opacity-0 group-hover:opacity-100 transition-opacity`} />
                     </div>
                   </div>
                 ))}
@@ -475,13 +417,7 @@ export default function AIWorkspace() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="material-symbols-outlined text-primary text-[18px]"
-                    data-icon="bookmark"
-                    data-weight="fill"
-                  >
-                    bookmark
-                  </span>
+                  <i className={`${mi("bookmark")} text-primary text-[18px]`} />
                   <h3 className="font-bold text-[11px] uppercase tracking-widest text-on-surface">
                     Recent Files
                   </h3>
@@ -516,11 +452,7 @@ export default function AIWorkspace() {
                       }
                       className="p-3 rounded-xl bg-surface-container/50 border border-outline-variant/10 flex items-center gap-3 hover:bg-surface-variant/30 transition-colors cursor-pointer"
                     >
-                      <span
-                        className={`material-symbols-outlined text-[18px] ${color || "text-cyan-400"}`}
-                      >
-                        {icon}
-                      </span>
+                      <i className={`${mi(icon)} text-[18px] ${color || "text-cyan-400"}`} />
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-medium leading-tight truncate">
                           {f.name}

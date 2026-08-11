@@ -80,7 +80,7 @@ export default function ProjectDashboard() {
         <p className="text-white font-medium">Project not found</p>
         <p className="text-on-surface-variant text-sm max-w-sm">{error || "This project may have been deleted."}</p>
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/dashboard")}
           className="bg-primary text-on-primary px-5 py-2 rounded font-bold text-sm hover:brightness-110 active:scale-95 transition-all"
         >
           Back to Home
@@ -98,11 +98,11 @@ export default function ProjectDashboard() {
             <p className="font-body-sm text-body-sm text-on-surface-variant opacity-70">Collaborative Space</p>
         </div>
         <nav className="flex-1 space-y-1">
-            <a onClick={(e) => { e.preventDefault(); navigate("/"); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors bg-surface-container-high text-primary font-medium active:scale-95 duration-100" href="#">
+            <a onClick={(e) => { e.preventDefault(); navigate("/dashboard"); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors bg-surface-container-high text-primary font-medium active:scale-95 duration-100" href="#">
                 <span className="material-symbols-outlined" data-icon="home">home</span>
                 <span className="font-body-sm text-body-sm">Home</span>
             </a>
-            <a onClick={() => navigate("/")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 duration-100 cursor-pointer">
+            <a onClick={() => navigate("/dashboard")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-on-surface-variant hover:text-on-surface hover:bg-white/5 active:scale-95 duration-100 cursor-pointer">
                 <span className="material-symbols-outlined" data-icon="account_tree">account_tree</span>
                 <span className="font-body-sm text-body-sm">Projects</span>
             </a>
@@ -112,7 +112,7 @@ export default function ProjectDashboard() {
             </a>
         </nav>
         <div className="mt-auto pt-6">
-            <button onClick={() => navigate("/")} className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-lg font-medium hover:brightness-110 transition-all active:scale-95">
+            <button onClick={() => navigate("/dashboard")} className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-lg font-medium hover:brightness-110 transition-all active:scale-95">
 <span className="material-symbols-outlined text-[20px]" data-icon="add">add</span>
 <span className="font-body-sm text-body-sm">New Project</span>
 </button>
@@ -147,7 +147,7 @@ export default function ProjectDashboard() {
             <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <nav className="flex items-center gap-2 text-on-surface-variant mb-2">
-                        <span onClick={() => navigate("/")} className="text-label-caps font-label-caps cursor-pointer hover:text-on-surface">Projects</span>
+                        <span onClick={() => navigate("/dashboard")} className="text-label-caps font-label-caps cursor-pointer hover:text-on-surface">Projects</span>
                         <span className="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
                         <span className="text-label-caps font-label-caps text-primary">{project.name}</span>
                     </nav>

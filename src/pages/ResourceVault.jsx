@@ -5,6 +5,7 @@ import { useProject } from "../hooks/useProjects";
 import { useUser, useAuth } from "../context/UserContext";
 import { relativeTime, formatBytes, isRecent, fileVisual } from "../lib/format";
 import NotificationBell from "../components/NotificationBell";
+import { mi } from "../lib/icons";
 
 export default function ResourceVault() {
   const { projectId } = useParams();
@@ -84,25 +85,25 @@ export default function ResourceVault() {
         </div>
         <nav className="flex-1 space-y-1">
             <div onClick={() => navigate(`/project/${projectId}/chat`)} className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm">
-                <span className="material-symbols-outlined">chat</span>
+                <i className={`${mi("chat")}`} />
                 <span>Chat</span>
             </div>
             <div onClick={() => navigate(`/project/${projectId}/ai`)} className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm">
-                <span className="material-symbols-outlined">smart_toy</span>
+                <i className={`${mi("smart_toy")}`} />
                 <span>AI Assistant</span>
             </div>
             <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-medium rounded-lg font-body-sm text-body-sm">
-                <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>folder_open</span>
+                <i className={`${mi("folder_open")}`} style={{fontVariationSettings: "'FILL' 1"}} />
                 <span>Resources</span>
             </div>
         </nav>
         <div className="pt-6 border-t border-outline-variant/10 space-y-1">
             <div onClick={() => navigate(`/project/${projectId}/settings`)} className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors font-body-sm text-body-sm">
-                <span className="material-symbols-outlined">settings</span>
+                <i className={`${mi("settings")}`} />
                 <span>Settings</span>
             </div>
             <div onClick={handleLogout} className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors font-body-sm text-body-sm">
-                <span className="material-symbols-outlined">logout</span>
+                <i className={`${mi("logout")}`} />
                 <span>Log out</span>
             </div>
         </div>
@@ -122,11 +123,11 @@ export default function ResourceVault() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="bg-surface-container-lowest border-none rounded-lg py-2 pl-10 pr-4 text-body-sm focus:ring-1 focus:ring-primary w-64 transition-all" placeholder="Search resources..." type="text" />
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                    <i className={`${mi("search")} absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]`} />
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-outline-variant/50 p-2" title="Workspace">account_tree</span>
-                    <span className="material-symbols-outlined text-primary/60 p-2" title="All changes saved">cloud_done</span>
+                    <i className={`${mi("account_tree")} text-outline-variant/50 p-2`} title="Workspace" />
+                    <i className={`${mi("cloud_done")} text-primary/60 p-2`} title="All changes saved" />
                     <NotificationBell />
                     <div className="w-8 h-8 rounded-full bg-surface-variant ml-2 overflow-hidden border border-outline-variant/20">
                         {currentUser.avatarUrl ? (
@@ -147,15 +148,15 @@ export default function ResourceVault() {
                 </h2>
                 {currentFolder && (
                   <button onClick={() => setCurrentFolder(null)} className="text-xs text-primary hover:underline flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back to root
+                    <i className={`${mi("arrow_back")} text-[16px]`} /> Back to root
                   </button>
                 )}
                 <div className="flex items-center gap-2 bg-surface-container-lowest p-1 rounded-lg border border-outline-variant/10">
                     <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-surface-variant text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
-                      <span className="material-symbols-outlined text-[20px]">grid_view</span>
+                      <i className={`${mi("grid_view")} text-[20px]`} />
                     </button>
                     <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-surface-variant text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
-                      <span className="material-symbols-outlined text-[20px]">list</span>
+                      <i className={`${mi("list")} text-[20px]`} />
                     </button>
                 </div>
             </div>
@@ -163,7 +164,7 @@ export default function ResourceVault() {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-colors shadow-lg shadow-primary/10 active:scale-95 disabled:opacity-50">
-              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+              <i className={`${mi("upload_file")} text-[18px]`} />
                 {uploading ? "UPLOADING…" : "UPLOAD RESOURCE"}
             </button>
             <input
@@ -186,9 +187,9 @@ export default function ResourceVault() {
         onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete folder "${folder.name}"?`)) deleteFolder(folder.$id); }}
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-error transition-opacity"
       >
-        <span className="material-symbols-outlined text-[16px]">close</span>
+        <i className={`${mi("close")} text-[16px]`} />
       </button>
-      <span className="material-symbols-outlined text-secondary text-[32px]">folder</span>
+      <i className={`${mi("folder")} text-secondary text-[32px]`} />
       <div>
           <p className="font-body-sm text-body-sm font-medium text-on-surface truncate">{folder.name}</p>
       </div>
@@ -196,7 +197,7 @@ export default function ResourceVault() {
 ))}
 {!currentFolder && (
   <div onClick={handleCreateFolder} className="flex-shrink-0 w-48 p-4 rounded-xl file-card flex flex-col gap-3 group cursor-pointer">
-      <span className="material-symbols-outlined text-on-surface-variant text-[32px]">create_new_folder</span>
+      <i className={`${mi("create_new_folder")} text-on-surface-variant text-[32px]`} />
       <div className="flex items-center h-full">
           <p className="font-body-sm text-body-sm font-medium text-on-surface-variant">Create New</p>
       </div>
@@ -210,7 +211,7 @@ export default function ResourceVault() {
               onClick={() => fileInputRef.current?.click()}
               className={`w-full h-32 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group cursor-pointer bg-surface-container-lowest/50 ${dragOver ? "border-primary bg-primary/5" : "border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5"}`}
             >
-                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">cloud_upload</span>
+                <i className={`${mi("cloud_upload")} text-on-surface-variant group-hover:text-primary transition-colors`} />
                 <p className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface">Drag files here to upload or <span className="text-primary font-medium underline">browse</span></p>
             </div>
             <div>
@@ -233,7 +234,7 @@ export default function ResourceVault() {
           {isImage ? (
             <img src={getFileUrl(file.storageFileId)} alt={file.name} className="w-full h-full object-cover" />
           ) : (
-            <span className={`material-symbols-outlined text-[64px] ${visual.color} opacity-40`}>{visual.icon}</span>
+            <i className={`${mi(visual.icon)} text-[64px] ${visual.color} opacity-40`} />
           )}
         </div>
         <div className="p-4 flex flex-col gap-2">
@@ -241,10 +242,10 @@ export default function ResourceVault() {
                 <span className={`px-2 py-0.5 rounded ${visual.bg} ${visual.color} font-code-sm text-[10px] uppercase font-bold`}>{visual.label}</span>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="text-on-surface-variant hover:text-on-surface">
-                    <span className="material-symbols-outlined text-[18px]">download</span>
+                    <i className={`${mi("download")} text-[18px]`} />
                   </a>
                   <button onClick={(e) => handleDeleteFile(e, file)} className="text-on-surface-variant hover:text-error">
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    <i className={`${mi("delete")} text-[18px]`} />
                   </button>
                 </div>
             </div>
@@ -263,15 +264,15 @@ export default function ResourceVault() {
   return (
     <div key={file.$id} className="glass-panel-vault p-3 rounded-xl flex items-center justify-between hover:bg-surface-variant/20 transition-all group">
         <div className="flex items-center gap-3 min-w-0">
-            <span className={`material-symbols-outlined ${visual.color} text-[22px] flex-shrink-0`}>{visual.icon}</span>
+            <i className={`${mi(visual.icon)} ${visual.color} text-[22px] flex-shrink-0`} />
             <div className="min-w-0">
                 <p className="font-body-sm text-body-sm font-medium text-on-surface truncate">{file.name}</p>
                 <p className="font-code-sm text-code-sm text-on-surface-variant">{relativeTime(file.$createdAt)} • {formatBytes(file.size)}</p>
             </div>
         </div>
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-            <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary"><span className="material-symbols-outlined text-[18px]">download</span></a>
-            <button onClick={(e) => handleDeleteFile(e, file)} className="p-2 text-on-surface-variant hover:text-error"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+            <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary"><i className={`${mi("download")} text-[18px]`} /></a>
+            <button onClick={(e) => handleDeleteFile(e, file)} className="p-2 text-on-surface-variant hover:text-error"><i className={`${mi("delete")} text-[18px]`} /></button>
         </div>
     </div>
   );
@@ -290,15 +291,15 @@ export default function ResourceVault() {
   return (
     <div key={file.$id} className="glass-panel-vault p-4 rounded-xl flex items-center justify-between hover:bg-surface-variant/20 transition-all cursor-pointer group">
         <div className="flex items-center gap-4">
-            <span className={`material-symbols-outlined ${visual.color} text-[28px]`}>{visual.icon}</span>
+            <i className={`${mi(visual.icon)} ${visual.color} text-[28px]`} />
             <div>
                 <p className="font-body-sm text-body-sm font-medium text-on-surface">{file.name}</p>
                 <p className="font-code-sm text-code-sm text-on-surface-variant">{relativeTime(file.$createdAt)} • {formatBytes(file.size)}</p>
             </div>
         </div>
         <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary transition-colors"><span className="material-symbols-outlined text-[20px]">download</span></a>
-            <button onClick={(e) => handleDeleteFile(e, file)} className="p-2 text-on-surface-variant hover:text-error transition-colors"><span className="material-symbols-outlined text-[20px]">delete</span></button>
+            <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary transition-colors"><i className={`${mi("download")} text-[20px]`} /></a>
+            <button onClick={(e) => handleDeleteFile(e, file)} className="p-2 text-on-surface-variant hover:text-error transition-colors"><i className={`${mi("delete")} text-[20px]`} /></button>
         </div>
     </div>
   );
@@ -314,7 +315,7 @@ export default function ResourceVault() {
         </div>
         <div className="w-px h-4 bg-outline-variant/30"></div>
         <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-on-surface-variant text-[18px]">sync</span>
+            <i className={`${mi("sync")} text-on-surface-variant text-[18px]`} />
             <span className="font-code-sm text-code-sm text-on-surface-variant">Synced</span>
         </div>
     </div>

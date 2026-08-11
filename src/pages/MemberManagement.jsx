@@ -6,6 +6,7 @@ import { useUser } from "../context/UserContext";
 import { useProfiles } from "../hooks/useProfiles";
 import { relativeTime } from "../lib/format";
 import NotificationBell from "../components/NotificationBell";
+import { mi } from "../lib/icons";
 
 const ROLES = ["Owner", "Editor", "Viewer"];
 
@@ -126,22 +127,22 @@ export default function MemberManagement() {
             <p className="text-on-surface-variant text-[12px] opacity-70">Collaborative Space</p>
         </div>
         <nav className="flex-1 space-y-1">
-            <a onClick={(e) => { e.preventDefault(); navigate("/"); }} className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-on-surface-variant hover:bg-white/5 hover:text-on-surface" href="#">
-                <span className="material-symbols-outlined text-[20px]">home</span>
+            <a onClick={(e) => { e.preventDefault(); navigate("/dashboard"); }} className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-on-surface-variant hover:bg-white/5 hover:text-on-surface" href="#">
+                <i className={`${mi("home")} text-[20px]`} />
                 <span className="font-body-sm">Home</span>
             </a>
-            <a onClick={(e) => { e.preventDefault(); navigate("/"); }} className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-on-surface-variant hover:bg-white/5 hover:text-on-surface" href="#">
-                <span className="material-symbols-outlined text-[20px]">account_tree</span>
+            <a onClick={(e) => { e.preventDefault(); navigate("/dashboard"); }} className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-on-surface-variant hover:bg-white/5 hover:text-on-surface" href="#">
+                <i className={`${mi("account_tree")} text-[20px]`} />
                 <span className="font-body-sm">Projects</span>
             </a>
             <a onClick={(e) => { e.preventDefault(); navigate(`/project/${projectId}/settings`); }} className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-on-surface-variant hover:bg-white/5 hover:text-on-surface" href="#">
-                <span className="material-symbols-outlined text-[20px]">settings</span>
+                <i className={`${mi("settings")} text-[20px]`} />
                 <span className="font-body-sm">Settings</span>
             </a>
         </nav>
         <div className="mt-auto pt-4 border-t border-white/5">
-            <button onClick={() => navigate("/")} className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-on-primary rounded-lg font-medium active:scale-95 transition-all duration-100">
-<span className="material-symbols-outlined text-[18px]">add</span>
+            <button onClick={() => navigate("/dashboard")} className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-on-primary rounded-lg font-medium active:scale-95 transition-all duration-100">
+<i className={`${mi("add")} text-[18px]`} />
 <span>New Project</span>
 </button>
             <div className="mt-6 flex items-center gap-3 px-2">
@@ -158,7 +159,7 @@ export default function MemberManagement() {
     <header className="h-16 fixed top-0 right-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-gutter ml-sidebar-width w-[calc(100%-260px)]">
         <div className="flex items-center gap-4 flex-1">
             <div className="relative w-full max-w-md group focus-within:ring-1 focus-within:ring-primary rounded-lg transition-all duration-200">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+                <i className={`${mi("search")} absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]`} />
                 <input
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
@@ -192,7 +193,7 @@ export default function MemberManagement() {
                         <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
                         <div className="relative z-10">
                             <h3 className="text-body-lg font-semibold text-on-surface mb-6 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary">person_add</span> Invite New Member
+                                <i className={`${mi("person_add")} text-primary`} /> Invite New Member
                             </h3>
                             <form className="space-y-4" onSubmit={handleInvite}>
                                 <div className="space-y-2">
@@ -232,7 +233,7 @@ export default function MemberManagement() {
                               onClick={handleCopyInviteLink}
                               className="w-full py-3 bg-surface-container-highest border border-outline-variant/20 text-on-surface rounded-lg font-bold text-label-caps tracking-widest uppercase hover:border-primary/40 hover:text-primary active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
-                              <span className="material-symbols-outlined text-[18px]">{linkCopied ? "check" : "link"}</span>
+                              <i className={`${mi(linkCopied ? "check" : "link")} text-[18px]`} />
                               {linkCopied ? "Link Copied" : "Copy Invite Link"}
                             </button>
                             <p className="text-[10px] text-on-surface-variant mt-2 text-center">
@@ -254,10 +255,10 @@ export default function MemberManagement() {
       </div>
       <div className="flex items-center gap-1">
           <button onClick={() => resendInvite(invite.$id, { projectName: project?.name || "a DevRoom OS project", inviterName: currentUser.name })} className="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Resend">
-<span className="material-symbols-outlined text-[18px]">refresh</span>
+<i className={`${mi("refresh")} text-[18px]`} />
 </button>
           <button onClick={() => removeMember(invite.$id)} className="p-2 text-on-surface-variant hover:text-error transition-colors" title="Cancel">
-<span className="material-symbols-outlined text-[18px]">close</span>
+<i className={`${mi("close")} text-[18px]`} />
 </button>
       </div>
   </div>
@@ -270,7 +271,7 @@ export default function MemberManagement() {
                         <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
                             <h3 className="font-semibold text-on-surface">Active Members</h3>
                             <button onClick={handleExportCsv} disabled={activeMembers.length === 0} className="text-label-caps text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
-<span className="material-symbols-outlined text-[16px]">download</span>
+<i className={`${mi("download")} text-[16px]`} />
                                 Export List
                             </button>
                         </div>
@@ -320,7 +321,7 @@ export default function MemberManagement() {
       </td>
       <td className="px-6 py-4 text-right">
           <button onClick={() => handleRemove(member.$id)} className="opacity-0 group-hover:opacity-100 p-2 text-on-surface-variant hover:text-error transition-all">
-<span className="material-symbols-outlined text-[20px]">delete_outline</span>
+<i className={`${mi("delete_outline")} text-[20px]`} />
 </button>
       </td>
   </tr>

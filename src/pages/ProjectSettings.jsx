@@ -73,7 +73,7 @@ export default function ProjectSettings() {
     setDeleting(true);
     try {
       await deleteProject(projectId);
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       alert(err.message || "Failed to delete project.");
       setDeleting(false);
@@ -94,7 +94,7 @@ export default function ProjectSettings() {
         <p className="text-white font-medium">Project not found</p>
         <p className="text-on-surface-variant text-sm max-w-sm">{error || "This project may have been deleted."}</p>
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/dashboard")}
           className="bg-primary text-on-primary px-5 py-2 rounded font-bold text-sm hover:brightness-110 active:scale-95 transition-all"
         >
           Back to Home

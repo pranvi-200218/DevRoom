@@ -50,7 +50,7 @@ export default function JoinProject() {
                     <i className={`${mi("error")} text-error text-[36px]`} />
                     <p className="text-on-surface font-medium mb-1">Couldn't join this project</p>
                     <p className="text-xs text-on-surface-variant mb-4">{message}</p>
-                    <button onClick={() => navigate("/")} className="text-primary text-sm font-bold hover:underline">Back to DevRoom OS</button>
+                    <button onClick={() => navigate("/dashboard")} className="text-primary text-sm font-bold hover:underline">Back to DevRoom OS</button>
                 </>)}
             </div>
         </div>

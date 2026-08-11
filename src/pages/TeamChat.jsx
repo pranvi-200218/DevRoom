@@ -4,9 +4,19 @@ import { useMessages, usePresence } from "../hooks/useMessages";
 import { useProject } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
 import { relativeTime } from "../lib/format";
+import { mi } from "../lib/icons";
 
 const CHANNEL = "general";
-const QUICK_EMOJIS = ["😀", "👍", "🎉", "🚀", "❤️", "👀", "🔥", "✅"];
+const QUICK_EMOJIS = [
+  { emoji: "😀", icon: "fa-regular fa-face-smile" },
+  { emoji: "👍", icon: "fa-solid fa-thumbs-up" },
+  { emoji: "🎉", icon: "fa-solid fa-champagne-glasses" },
+  { emoji: "🚀", icon: "fa-solid fa-rocket" },
+  { emoji: "❤️", icon: "fa-solid fa-heart" },
+  { emoji: "👀", icon: "fa-solid fa-eye" },
+  { emoji: "🔥", icon: "fa-solid fa-fire" },
+  { emoji: "✅", icon: "fa-solid fa-circle-check" },
+];
 const URL_REGEX = /(https?:\/\/[^\s]+)/gi;
 
 export default function TeamChat() {
@@ -131,7 +141,7 @@ export default function TeamChat() {
     <aside className="w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 z-50">
         <div className="mb-8 px-2 flex items-center gap-3">
             <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-primary text-xl" style={{fontVariationSettings: "'FILL' 1"}}>terminal</span>
+                <i className={`${mi("terminal")} text-on-primary text-xl`} style={{fontVariationSettings: "'FILL' 1"}} />
             </div>
             <div className="flex flex-col">
                 <h1 className="font-headline-md text-headline-md font-bold text-primary leading-none">DevRoom OS</h1>
@@ -143,25 +153,25 @@ export default function TeamChat() {
                 <span className="text-[10px] font-bold text-outline uppercase tracking-widest">Main Modules</span>
             </div>
             <a className="flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-medium rounded-lg cursor-pointer active:scale-95 duration-200 transition-colors">
-                <span className="material-symbols-outlined text-lg" style={{fontVariationSettings: "'FILL' 1"}}>chat</span>
+                <i className={`${mi("chat")} text-lg`} style={{fontVariationSettings: "'FILL' 1"}} />
                 <span className="font-body-sm text-body-sm">Chat</span>
             </a>
             <a onClick={() => navigate(`/project/${projectId}/ai`)} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
-                <span className="material-symbols-outlined text-lg">smart_toy</span>
+                <i className={`${mi("smart_toy")} text-lg`} />
                 <span className="font-body-sm text-body-sm">AI Assistant</span>
             </a>
             <a onClick={() => navigate(`/project/${projectId}/resources`)} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
-                <span className="material-symbols-outlined text-lg">folder_open</span>
+                <i className={`${mi("folder_open")} text-lg`} />
                 <span className="font-body-sm text-body-sm">Resources</span>
             </a>
         </nav>
         <div className="mt-auto space-y-1">
             <a onClick={() => navigate(`/project/${projectId}/settings`)} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
-                <span className="material-symbols-outlined text-lg">settings</span>
+                <i className={`${mi("settings")} text-lg`} />
                 <span className="font-body-sm text-body-sm">Settings</span>
             </a>
             <div onClick={() => alert("No new notifications yet.")} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
-                <span className="material-symbols-outlined text-lg">notifications</span>
+                <i className={`${mi("notifications")} text-lg`} />
                 <span className="font-body-sm text-body-sm">Notifications</span>
             </div>
             <div className="pt-4 flex items-center gap-3 px-2">
@@ -189,14 +199,14 @@ export default function TeamChat() {
                   className={`flex items-center gap-2 transition-colors ${showPinnedOnly ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}
                   title={showPinnedOnly ? "Showing pinned only — click to show all" : "Show pinned messages only"}
                 >
-                    <span className="material-symbols-outlined text-sm" style={showPinnedOnly ? { fontVariationSettings: "'FILL' 1" } : undefined}>push_pin</span>
+                    <i className={`${mi("push_pin")} text-sm`} style={showPinnedOnly ? { fontVariationSettings: "'FILL' 1" } : undefined} />
                     <span className="text-xs font-medium">{pinnedMessages.length} Pinned</span>
                 </button>
             </div>
             <div className="flex items-center gap-4">
                 <div className="relative group">
                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                        <span className="material-symbols-outlined text-on-surface-variant text-lg">search</span>
+                        <i className={`${mi("search")} text-on-surface-variant text-lg`} />
                     </div>
                     <input
                       value={searchTerm}
@@ -205,15 +215,13 @@ export default function TeamChat() {
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => navigate("/")} className="p-2 text-on-surface-variant hover:text-primary transition-all cursor-pointer" title="Back to Projects">
-<span className="material-symbols-outlined">account_tree</span>
+                    <button onClick={() => navigate("/dashboard")} className="p-2 text-on-surface-variant hover:text-primary transition-all cursor-pointer" title="Back to Projects">
+<i className={`${mi("account_tree")}`} />
 </button>
-                    <span
-                      className={`material-symbols-outlined p-2 ${error ? "text-error" : loading ? "text-outline-variant" : "text-primary"}`}
+                    <i
+                      className={`${mi(error ? "cloud_off" : loading ? "cloud_sync" : "cloud_done")} p-2 ${error ? "text-error" : loading ? "text-outline-variant" : "text-primary"}`}
                       title={error ? "Sync failed" : loading ? "Syncing…" : "All changes saved"}
-                    >
-                      {error ? "cloud_off" : loading ? "cloud_sync" : "cloud_done"}
-                    </span>
+                     />
                 </div>
             </div>
         </header>
@@ -240,28 +248,28 @@ export default function TeamChat() {
             <div className="flex items-baseline gap-2 mb-1">
                 <span className="font-bold text-sm">{msg.authorName}{isOwn ? " (you)" : ""}</span>
                 <span className="text-[10px] text-outline-variant">{relativeTime(msg.$createdAt)}</span>
-                {msg.pinned && <span className="material-symbols-outlined text-primary text-[14px]" style={{fontVariationSettings: "'FILL' 1"}}>push_pin</span>}
+                {msg.pinned && <i className={`${mi("push_pin")} text-primary text-[14px]`} style={{fontVariationSettings: "'FILL' 1"}} />}
             </div>
             <div className="bg-surface-container/50 p-4 rounded-xl rounded-tl-none border border-outline-variant/10 message-gradient relative hover:border-outline-variant/30 transition-colors">
                 {msg.text && <p className="text-on-surface leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>}
                 {msg.attachmentFileId && (
                   <a href={getAttachmentUrl(msg.attachmentFileId)} target="_blank" rel="noreferrer" className="mt-3 bg-surface-container-lowest border border-outline-variant/20 rounded-lg p-3 flex items-center gap-3 max-w-sm hover:border-secondary/50 cursor-pointer transition-all">
                       <div className="w-10 h-10 bg-secondary/10 rounded flex items-center justify-center">
-                          <span className="material-symbols-outlined text-secondary" style={{fontVariationSettings: "'FILL' 1"}}>description</span>
+                          <i className={`${mi("description")} text-secondary`} style={{fontVariationSettings: "'FILL' 1"}} />
                       </div>
                       <div className="flex flex-col overflow-hidden">
                           <span className="text-xs font-bold truncate">{msg.attachmentName}</span>
                       </div>
-                      <span className="material-symbols-outlined ml-auto text-on-surface-variant text-lg">download</span>
+                      <i className={`${mi("download")} ml-auto text-on-surface-variant text-lg`} />
                   </a>
                 )}
                 <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={() => togglePin(msg.$id)} title="Pin" className="p-1 text-on-surface-variant hover:text-primary">
-                      <span className="material-symbols-outlined text-[16px]">push_pin</span>
+                      <i className={`${mi("push_pin")} text-[16px]`} />
                     </button>
                     {isOwn && (
                       <button onClick={() => deleteMessage(msg.$id)} title="Delete" className="p-1 text-on-surface-variant hover:text-error">
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        <i className={`${mi("delete")} text-[16px]`} />
                       </button>
                     )}
                 </div>
@@ -281,7 +289,7 @@ export default function TeamChat() {
             <div className="hidden lg:flex flex-col w-80 bg-surface-container-low border-l border-outline-variant/10">
                 <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center">
                     <h3 className="font-bold text-sm">Channel Info</h3>
-                    <span className="material-symbols-outlined text-on-surface-variant text-lg">info</span>
+                    <i className={`${mi("info")} text-on-surface-variant text-lg`} />
                 </div>
                 <div className="p-6 space-y-6 overflow-y-auto">
                     <div>
@@ -317,7 +325,7 @@ export default function TeamChat() {
                                 className="flex items-center gap-3 group cursor-pointer"
                               >
                                   <div className="p-1.5 bg-surface-variant rounded">
-                                      <span className="material-symbols-outlined text-sm">link</span>
+                                      <i className={`${mi("link")} text-sm`} />
                                   </div>
                                   <div className="flex flex-col overflow-hidden">
                                       <span className="text-[11px] font-medium truncate group-hover:text-primary">{link.url}</span>
@@ -336,32 +344,33 @@ export default function TeamChat() {
                 {/* Action Bar */}
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-outline-variant/5 bg-surface-container-lowest/50">
                     <button onClick={() => wrapSelection("**")} title="Bold" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
-<span className="material-symbols-outlined text-lg">format_bold</span>
+<i className={`${mi("format_bold")} text-lg`} />
 </button>
                     <button onClick={() => wrapSelection("_")} title="Italic" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
-<span className="material-symbols-outlined text-lg">format_italic</span>
+<i className={`${mi("format_italic")} text-lg`} />
 </button>
                     <button onClick={() => wrapSelection("`")} title="Code" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
-<span className="material-symbols-outlined text-lg">code</span>
+<i className={`${mi("code")} text-lg`} />
 </button>
                     <div className="h-4 w-px bg-outline-variant/20 mx-1"></div>
                     <button onClick={() => fileInputRef.current?.click()} title="Attach file" className={`p-1.5 transition-all rounded hover:bg-surface-variant/30 ${attachment ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}>
-<span className="material-symbols-outlined text-lg">attach_file</span>
+<i className={`${mi("attach_file")} text-lg`} />
 </button>
                     <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => setAttachment(e.target.files[0] || null)} />
                     <div className="relative" ref={emojiRef}>
                       <button onClick={() => setEmojiOpen((v) => !v)} title="Emoji" className={`p-1.5 transition-all rounded hover:bg-surface-variant/30 ${emojiOpen ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}>
-<span className="material-symbols-outlined text-lg">mood</span>
+<i className={`${mi("mood")} text-lg`} />
 </button>
                       {emojiOpen && (
                         <div className="absolute bottom-full mb-2 left-0 bg-surface-container-high border border-outline-variant/20 rounded-lg p-2 flex gap-1 shadow-xl z-10">
-                          {QUICK_EMOJIS.map((emoji) => (
+                          {QUICK_EMOJIS.map((item) => (
                             <button
-                              key={emoji}
-                              onClick={() => insertEmoji(emoji)}
-                              className="text-lg hover:scale-125 transition-transform"
+                              key={item.emoji}
+                              onClick={() => insertEmoji(item.emoji)}
+                              title={item.emoji}
+                              className="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-variant/40 hover:scale-110 transition-all text-on-surface-variant hover:text-primary"
                             >
-                              {emoji}
+                              <i className={item.icon} />
                             </button>
                           ))}
                         </div>
@@ -370,7 +379,7 @@ export default function TeamChat() {
                 </div>
                 {attachment && (
                   <div className="px-4 pt-2 flex items-center gap-2 text-xs text-on-surface-variant">
-                    <span className="material-symbols-outlined text-[16px]">description</span>
+                    <i className={`${mi("description")} text-[16px]`} />
                     {attachment.name}
                     <button onClick={() => setAttachment(null)} className="text-error hover:underline">remove</button>
                   </div>
@@ -385,7 +394,7 @@ export default function TeamChat() {
                       onBlur={() => setTyping(false)}
                       className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1 resize-none h-10 max-h-32 font-body-sm leading-relaxed" placeholder={`Message #${CHANNEL}...`} rows="1"></textarea>
                     <button onClick={handleSend} disabled={sending} className="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center hover:shadow-[0_0_15px_rgba(138,235,255,0.4)] active:scale-95 transition-all disabled:opacity-50">
-<span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>send</span>
+<i className={`${mi("send")}`} style={{fontVariationSettings: "'FILL' 1"}} />
 </button>
                 </div>
             </div>
