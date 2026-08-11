@@ -106,7 +106,7 @@ export default function Landing() {
         <div className="h-16 max-w-container-max mx-auto px-margin-mobile lg:px-margin-desktop flex items-center justify-between">
           <div className="flex items-center gap-2">
             <i className="fa-solid fa-terminal text-primary text-[20px]" />
-            <span className="font-headline-md text-[18px] tracking-tight text-on-surface">DevRoom<span className="text-primary"> OS</span></span>
+            <span className="font-headline-md text-[18px] tracking-tight text-on-surface">DevRoom<span className="text-primary"></span></span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-body-sm text-on-surface-variant hover:text-on-surface transition-colors">Features</a>
@@ -154,7 +154,7 @@ export default function Landing() {
         </h1>
 
         <p className="hero-in font-body-lg text-[17px] md:text-[19px] text-on-surface-variant max-w-2xl mt-6 leading-relaxed">
-          DevRoom OS is a real-time collaboration platform — invite links, live permissions,
+          DevRoom is a real-time collaboration platform - invite links, live permissions,
           team chat, and an AI workspace, built on Appwrite Teams instead of brittle per-user ACLs.
         </p>
 
@@ -280,8 +280,8 @@ export default function Landing() {
 
       {/* ---------- FOOTER ---------- */}
       <footer className="border-t border-white/5 py-10 px-margin-mobile lg:px-margin-desktop max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <span className="font-headline-md text-[15px] text-on-surface-variant">DevRoom<span className="text-primary"> OS</span></span>
-        <span className="font-body-sm text-on-surface-variant/60 text-[13px]">Built by Pranvi Srivastava.</span>
+        <span className="font-headline-md text-[15px] text-on-surface-variant">DevRoom<span className="text-primary"></span></span>
+        <span className="font-body-sm text-on-surface-variant/60 text-[13px]">© 2026 DevRoom : Built by Pranvi </span>
       </footer>
     </div>
   );
