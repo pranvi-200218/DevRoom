@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useNavigate } from "react-router-dom";
+import usePageEntrance from "../hooks/usePageEntrance";
 import { useProjects } from "../hooks/useProjects";
+import { SkeletonProjectCard, SkeletonListRow } from "../components/Skeleton";
 import { useUser, useAuth } from "../context/UserContext";
 import ProjectFormModal from "../components/ProjectFormModal";
 import NotificationBell from "../components/NotificationBell";
@@ -66,6 +68,8 @@ export default function Home() {
       { opacity: 1, y: 0, duration: 0.45, stagger: 0.05, ease: "power2.out" }
     );
   }, [loading, viewMode]);
+
+  usePageEntrance([loading]);
 
   useEffect(() => {
     if (!loading) setLastSyncedAt(new Date());
@@ -152,7 +156,7 @@ export default function Home() {
         />
       )}
       <main className="min-h-screen relative flex flex-col">
-        <header className="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 flex justify-end items-center h-16 px-gutter sticky top-0 z-40">
+        <header className="gsap-topbar bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 flex justify-end items-center h-16 px-gutter sticky top-0 z-40">
           <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-lg hidden md:block">
             <div className="glass h-10 rounded-lg flex items-center px-4 gap-3 hover:border-primary/30 transition-all primary-glow">
               <i className={`${mi("search")} text-outline text-[20px]`} />
@@ -283,8 +287,8 @@ export default function Home() {
               <div className="space-y-4">
                 {loading && (
                   <>
-                    <div className="glass p-4 rounded-xl h-[72px] animate-pulse" />
-                    <div className="glass p-4 rounded-xl h-[72px] animate-pulse" />
+                    <SkeletonListRow />
+                    <SkeletonListRow />
                   </>
                 )}
                 {!loading &&
@@ -339,9 +343,9 @@ export default function Home() {
               </div>
               <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 gap-6" : "flex flex-col gap-3"}>
                 {loading &&
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className={viewMode === "grid" ? "glass rounded-xl p-6 h-[200px] animate-pulse" : "glass rounded-xl h-16 animate-pulse"} />
-                  ))}
+                  Array.from({ length: 4 }).map((_, i) =>
+                    viewMode === "grid" ? <SkeletonProjectCard key={i} /> : <SkeletonListRow key={i} />
+                  )}
 
                 {!loading && error && (
                   <div className="sm:col-span-2 glass rounded-xl p-8 text-center border-error/30">

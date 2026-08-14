@@ -1,16 +1,20 @@
 import { useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import usePageEntrance from "../hooks/usePageEntrance";
 import { useResources } from "../hooks/useResources";
 import { useProject } from "../hooks/useProjects";
 import { useUser, useAuth } from "../context/UserContext";
 import { relativeTime, formatBytes, isRecent, fileVisual } from "../lib/format";
 import NotificationBell from "../components/NotificationBell";
+import FilePreviewModal from "../components/FilePreviewModal";
+import { SkeletonGrid, SkeletonFileCard, SkeletonFileRow } from "../components/Skeleton";
 import { mi } from "../lib/icons";
 
 export default function ResourceVault() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { project } = useProject(projectId);
+  usePageEntrance();
   const currentUser = useUser();
   const { logout } = useAuth();
   const [currentFolder, setCurrentFolder] = useState(null);
@@ -33,6 +37,7 @@ export default function ResourceVault() {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
+  const [previewFile, setPreviewFile] = useState(null);
 
   async function handleFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
@@ -78,7 +83,7 @@ export default function ResourceVault() {
 
   return (
     <>
-    <aside className="w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant/10 flex flex-col h-full py-6 px-4 z-50">
+    <aside className="gsap-sidebar w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant/10 flex flex-col h-full py-6 px-4 z-50">
         <div className="mb-10 px-2">
             <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary">DevRoom OS</h1>
             <p className="font-body-sm text-body-sm opacity-50">Engineering Workspace</p>
@@ -109,7 +114,7 @@ export default function ResourceVault() {
         </div>
     </aside>
     <main className="ml-sidebar-width min-h-screen bg-background">
-        <header className="flex justify-between items-center h-16 px-gutter sticky top-0 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 z-40">
+        <header className="gsap-topbar flex justify-between items-center h-16 px-gutter sticky top-0 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 z-40">
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                     <span className="text-on-surface-variant font-label-caps text-label-caps">{project?.name || "Project"}</span>
@@ -225,11 +230,12 @@ export default function ResourceVault() {
                 )}
                 {viewMode === "grid" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-{recentFiles.map((file) => {
+{loading && Array.from({ length: 8 }).map((_, i) => <SkeletonFileCard key={i} />)}
+{!loading && recentFiles.map((file) => {
   const visual = fileVisual(file.mimeType);
   const isImage = file.mimeType?.startsWith("image/");
   return (
-    <div key={file.$id} className="rounded-xl file-card recent-glow flex flex-col overflow-hidden group">
+    <div key={file.$id} onClick={() => setPreviewFile(file)} className="rounded-xl file-card recent-glow flex flex-col overflow-hidden group cursor-pointer">
         <div className="h-32 bg-surface-container-highest flex items-center justify-center p-4 relative overflow-hidden">
           {isImage ? (
             <img src={getFileUrl(file.storageFileId)} alt={file.name} className="w-full h-full object-cover" />
@@ -241,7 +247,7 @@ export default function ResourceVault() {
             <div className="flex justify-between items-start">
                 <span className={`px-2 py-0.5 rounded ${visual.bg} ${visual.color} font-code-sm text-[10px] uppercase font-bold`}>{visual.label}</span>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="text-on-surface-variant hover:text-on-surface">
+                  <a href={getFileUrl(file.storageFileId)} onClick={(e) => e.stopPropagation()} target="_blank" rel="noreferrer" className="text-on-surface-variant hover:text-on-surface">
                     <i className={`${mi("download")} text-[18px]`} />
                   </a>
                   <button onClick={(e) => handleDeleteFile(e, file)} className="text-on-surface-variant hover:text-error">
@@ -259,10 +265,11 @@ export default function ResourceVault() {
                 )}
                 {viewMode === "list" && (
                 <div className="space-y-2">
-{recentFiles.map((file) => {
+{loading && Array.from({ length: 5 }).map((_, i) => <SkeletonFileRow key={i} />)}
+{!loading && recentFiles.map((file) => {
   const visual = fileVisual(file.mimeType);
   return (
-    <div key={file.$id} className="glass-panel-vault p-3 rounded-xl flex items-center justify-between hover:bg-surface-variant/20 transition-all group">
+    <div key={file.$id} onClick={() => setPreviewFile(file)} className="glass-panel-vault p-3 rounded-xl flex items-center justify-between hover:bg-surface-variant/20 transition-all group cursor-pointer">
         <div className="flex items-center gap-3 min-w-0">
             <i className={`${mi(visual.icon)} ${visual.color} text-[22px] flex-shrink-0`} />
             <div className="min-w-0">
@@ -271,7 +278,7 @@ export default function ResourceVault() {
             </div>
         </div>
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-            <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary"><i className={`${mi("download")} text-[18px]`} /></a>
+            <a href={getFileUrl(file.storageFileId)} onClick={(e) => e.stopPropagation()} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary"><i className={`${mi("download")} text-[18px]`} /></a>
             <button onClick={(e) => handleDeleteFile(e, file)} className="p-2 text-on-surface-variant hover:text-error"><i className={`${mi("delete")} text-[18px]`} /></button>
         </div>
     </div>
@@ -286,10 +293,11 @@ export default function ResourceVault() {
                   <p className="text-sm text-on-surface-variant">Nothing here yet.</p>
                 )}
                 <div className="space-y-2">
-{olderFiles.map((file) => {
+{loading && Array.from({ length: 4 }).map((_, i) => <SkeletonFileRow key={i} />)}
+{!loading && olderFiles.map((file) => {
   const visual = fileVisual(file.mimeType);
   return (
-    <div key={file.$id} className="glass-panel-vault p-4 rounded-xl flex items-center justify-between hover:bg-surface-variant/20 transition-all cursor-pointer group">
+    <div key={file.$id} onClick={() => setPreviewFile(file)} className="glass-panel-vault p-4 rounded-xl flex items-center justify-between hover:bg-surface-variant/20 transition-all cursor-pointer group">
         <div className="flex items-center gap-4">
             <i className={`${mi(visual.icon)} ${visual.color} text-[28px]`} />
             <div>
@@ -298,7 +306,7 @@ export default function ResourceVault() {
             </div>
         </div>
         <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <a href={getFileUrl(file.storageFileId)} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary transition-colors"><i className={`${mi("download")} text-[20px]`} /></a>
+            <a href={getFileUrl(file.storageFileId)} onClick={(e) => e.stopPropagation()} target="_blank" rel="noreferrer" className="p-2 text-on-surface-variant hover:text-primary transition-colors"><i className={`${mi("download")} text-[20px]`} /></a>
             <button onClick={(e) => handleDeleteFile(e, file)} className="p-2 text-on-surface-variant hover:text-error transition-colors"><i className={`${mi("delete")} text-[20px]`} /></button>
         </div>
     </div>
@@ -308,6 +316,11 @@ export default function ResourceVault() {
             </div>
         </div>
     </main>
+    <FilePreviewModal
+      file={previewFile}
+      url={previewFile ? getFileUrl(previewFile.storageFileId) : null}
+      onClose={() => setPreviewFile(null)}
+    />
     <div className="fixed bottom-6 right-6 glass-panel-vault px-6 py-3 rounded-full flex items-center gap-6 shadow-2xl z-50 border-primary/20">
         <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#8aebff]"></div>

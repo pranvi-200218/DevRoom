@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useLayoutEffect, useRef } from "react";
+import { gsap } from "gsap";
 import { useAuth } from "../context/UserContext";
 import { account } from "../lib/appwrite";
 import { mi } from "../lib/icons";
@@ -9,6 +10,14 @@ export default function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const cardRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(cardRef.current, { opacity: 0, y: 24, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" });
+    });
+    return () => ctx.revert();
+  }, []);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const [recoverySent, setRecoverySent] = useState(false);
@@ -51,7 +60,7 @@ export default function Login() {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-      <div className="glass rounded-xl p-8 w-full max-w-sm primary-glow text-center">
+      <div ref={cardRef} className="glass rounded-xl p-8 w-full max-w-sm primary-glow text-center">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <i className={`${mi("waving_hand")} text-primary text-[22px]`} />
         </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import usePageEntrance from "../hooks/usePageEntrance";
 import { useAIChat, AI_ROOMS } from "../hooks/useAIChat";
 import { useProject } from "../hooks/useProjects";
 import { useMembers } from "../hooks/useMembers";
@@ -37,6 +38,7 @@ export default function AIWorkspace() {
   const [room, setRoom] = useState(AI_ROOMS[0].id);
   const currentUser = useUser();
   const { project } = useProject(projectId);
+  usePageEntrance();
   const { activeMembers } = useMembers(projectId);
   const { files } = useResources(projectId);
   const {
@@ -84,7 +86,7 @@ export default function AIWorkspace() {
       {/* Background Decoration */}
 
       {/* SideNavBar (Shared Component Identity) */}
-      <aside className="w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 z-50">
+      <aside className="gsap-sidebar w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 z-50">
         <div className="mb-10 px-2">
           <h1 className="font-headline-md text-headline-md font-extrabold text-primary tracking-tighter">
             DevRoom OS
@@ -170,7 +172,7 @@ export default function AIWorkspace() {
         </div>
       </aside>
       {/* TopNavBar (Shared Component Identity) */}
-      <header className="ml-sidebar-width h-16 px-gutter flex justify-between items-center sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10">
+      <header className="gsap-topbar ml-sidebar-width h-16 px-gutter flex justify-between items-center sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <span className="text-on-surface-variant font-label-caps text-label-caps uppercase">

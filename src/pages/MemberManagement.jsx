@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import usePageEntrance from "../hooks/usePageEntrance";
 import { useMembers } from "../hooks/useMembers";
 import { useProject } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
@@ -47,6 +48,8 @@ export default function MemberManagement() {
     resendInvite,
   } = useMembers(projectId);
   const profiles = useProfiles(activeMembers.map((m) => m.userId));
+
+  usePageEntrance([loading]);
 
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("Editor");
@@ -121,7 +124,7 @@ export default function MemberManagement() {
   }
   return (
     <>
-    <aside className="w-sidebar-width h-full fixed left-0 top-0 bg-surface-dim border-r border-white/5 flex flex-col p-4 z-50">
+    <aside className="gsap-sidebar w-sidebar-width h-full fixed left-0 top-0 bg-surface-dim border-r border-white/5 flex flex-col p-4 z-50">
         <div className="mb-8 px-2">
             <h1 className="font-headline-md text-headline-md font-bold text-primary">DevRoom</h1>
             <p className="text-on-surface-variant text-[12px] opacity-70">Collaborative Space</p>
@@ -156,7 +159,7 @@ export default function MemberManagement() {
             </div>
         </div>
     </aside>
-    <header className="h-16 fixed top-0 right-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-gutter ml-sidebar-width w-[calc(100%-260px)]">
+    <header className="gsap-topbar h-16 fixed top-0 right-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-gutter ml-sidebar-width w-[calc(100%-260px)]">
         <div className="flex items-center gap-4 flex-1">
             <div className="relative w-full max-w-md group focus-within:ring-1 focus-within:ring-primary rounded-lg transition-all duration-200">
                 <i className={`${mi("search")} absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]`} />
@@ -178,7 +181,7 @@ export default function MemberManagement() {
             </button>
         </div>
     </header>
-    <main className="ml-sidebar-width pt-16 min-h-screen bg-background">
+    <main className="gsap-panel ml-sidebar-width pt-16 min-h-screen bg-background">
         <div className="max-w-container-max mx-auto px-margin-desktop py-10">
             <div className="mb-10">
                 <div className="flex items-end gap-3 mb-2">

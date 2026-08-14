@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useLayoutEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { gsap } from "gsap";
 import { account } from "../lib/appwrite";
 
 // Landed on from the recovery email link: /reset-password?userId=...&secret=...
@@ -8,6 +9,14 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const userId = params.get("userId");
   const secret = params.get("secret");
+  const cardRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(cardRef.current, { opacity: 0, y: 24, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" });
+    });
+    return () => ctx.revert();
+  }, []);
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -38,7 +47,7 @@ export default function ResetPassword() {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-      <div className="glass rounded-xl p-8 w-full max-w-sm primary-glow text-center">
+      <div ref={cardRef} className="glass rounded-xl p-8 w-full max-w-sm primary-glow text-center">
         <h2 className="font-headline-md text-headline-md text-white mb-2">Set your password</h2>
         <p className="text-sm text-on-surface-variant mb-6">
           You were invited to a DevRoom OS project. Set a password to activate your account.

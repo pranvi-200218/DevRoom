@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import usePageEntrance from "../hooks/usePageEntrance";
 import { useProject, useProjects } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
 import { syncProjectAccess } from "../lib/syncProjectAccess";
@@ -12,6 +13,7 @@ export default function ProjectSettings() {
   const navigate = useNavigate();
   const currentUser = useUser();
   const { project, loading, error } = useProject(projectId);
+  usePageEntrance([loading]);
   const { updateProject, deleteProject } = useProjects();
 
   const isOwner = project?.ownerId === currentUser.$id;
@@ -104,7 +106,7 @@ export default function ProjectSettings() {
   }
 
   return (
-    <div className="ml-sidebar-width min-h-screen bg-background px-gutter py-10 max-w-2xl">
+    <div className="gsap-panel ml-sidebar-width min-h-screen bg-background px-gutter py-10 max-w-2xl">
       <button onClick={() => navigate(`/project/${projectId}`)} className="text-xs text-primary hover:underline flex items-center gap-1 mb-6">
         <i className={`${mi("arrow_back")} text-[14px]`} /> Back to {project.name}
       </button>

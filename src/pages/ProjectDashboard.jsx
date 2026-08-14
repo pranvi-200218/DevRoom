@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import usePageEntrance from "../hooks/usePageEntrance";
 import { useProject } from "../hooks/useProjects";
 import { useMembers } from "../hooks/useMembers";
 import { useResources } from "../hooks/useResources";
@@ -33,6 +34,8 @@ export default function ProjectDashboard() {
   const { files, loading: filesLoading } = useResources(projectId);
   const { messages, loading: messagesLoading } = useMessages(projectId, "general");
   const { activity, loading: activityLoading } = useActivity(projectId, 12);
+
+  usePageEntrance([loading]);
 
   const [headerSearch, setHeaderSearch] = useState("");
 
@@ -92,7 +95,7 @@ export default function ProjectDashboard() {
   return (
     <>
     {/* SideNavBar (Shared Component) */}
-    <aside className="w-sidebar-width h-full fixed left-0 top-0 bg-surface-dim border-r border-white/5 flex flex-col p-4 z-50">
+    <aside className="gsap-sidebar w-sidebar-width h-full fixed left-0 top-0 bg-surface-dim border-r border-white/5 flex flex-col p-4 z-50">
         <div className="mb-10 px-2">
             <h1 className="font-headline-md text-headline-md font-bold text-primary">DevRoom</h1>
             <p className="font-body-sm text-body-sm text-on-surface-variant opacity-70">Collaborative Space</p>
@@ -119,7 +122,7 @@ export default function ProjectDashboard() {
         </div>
     </aside>
     {/* TopNavBar (Shared Component) */}
-    <header className="h-16 fixed top-0 right-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-gutter ml-sidebar-width w-[calc(100%-260px)]">
+    <header className="gsap-topbar h-16 fixed top-0 right-0 z-40 bg-surface/60 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-gutter ml-sidebar-width w-[calc(100%-260px)]">
         <div className="flex items-center gap-4 bg-surface-container-lowest border border-white/5 rounded-lg px-3 py-1.5 w-96 focus-within:ring-1 focus-within:ring-primary transition-all">
             <span className="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="search">search</span>
             <input
@@ -142,7 +145,7 @@ export default function ProjectDashboard() {
     {/* Main Content Canvas */}
     <main className="ml-sidebar-width pt-16 h-screen overflow-hidden flex">
         {/* Scrollable Dashboard Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-8 max-w-container-max">
+        <div className="gsap-panel flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-8 max-w-container-max">
             {/* Header Section */}
             <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>

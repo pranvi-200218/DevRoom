@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import usePageEntrance from "../hooks/usePageEntrance";
 import { useMessages, usePresence } from "../hooks/useMessages";
 import { useProject } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
@@ -24,6 +25,7 @@ export default function TeamChat() {
   const navigate = useNavigate();
   const user = useUser();
   const { project } = useProject(projectId);
+  usePageEntrance();
   const {
     messages,
     pinnedMessages,
@@ -138,7 +140,7 @@ export default function TeamChat() {
   return (
     <>
     {/* Sidebar Navigation */}
-    <aside className="w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 z-50">
+    <aside className="gsap-sidebar w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 z-50">
         <div className="mb-8 px-2 flex items-center gap-3">
             <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
                 <i className={`${mi("terminal")} text-on-primary text-xl`} style={{fontVariationSettings: "'FILL' 1"}} />
@@ -186,7 +188,7 @@ export default function TeamChat() {
     {/* Main Content Area */}
     <main className="ml-sidebar-width h-screen flex flex-col relative overflow-hidden bg-surface-container-lowest">
         {/* Top Navigation Bar */}
-        <header className="flex justify-between items-center h-16 px-gutter bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 sticky top-0 z-40">
+        <header className="gsap-topbar flex justify-between items-center h-16 px-gutter bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 sticky top-0 z-40">
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                     <span className="font-label-caps text-label-caps text-on-surface-variant tracking-widest">{(project?.name || "PROJECT").toUpperCase()}</span>

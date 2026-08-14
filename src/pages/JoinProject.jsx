@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
 import { useUser } from "../context/UserContext";
 import { functions, appwriteConfig } from "../lib/appwrite";
 import { mi } from "../lib/icons";
@@ -12,6 +13,14 @@ export default function JoinProject() {
     const user = useUser();
     const [status, setStatus] = useState("joining");
     const [message, setMessage] = useState("");
+    const cardRef = useRef(null);
+
+    useLayoutEffect(() => {
+        const ctx = gsap.context(() => {
+            gsap.fromTo(cardRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" });
+        });
+        return () => ctx.revert();
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -37,7 +46,7 @@ export default function JoinProject() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
-            <div className="glass rounded-2xl p-10 max-w-sm w-full text-center space-y-4">
+            <div ref={cardRef} className="glass rounded-2xl p-10 max-w-sm w-full text-center space-y-4">
                 {status === "joining" && (<>
                     <i className={`${mi("progress_activity")} text-primary text-[36px]`} />
                     <p className="text-on-surface font-medium">Joining project…</p>
