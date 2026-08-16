@@ -5,24 +5,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * DevRoom OS — public landing page.
- * Ported 1:1 from the devroom-landing-v2.html prototype into React, then
- * pushed further: every animation from the prototype (custom cursor,
- * magnetic buttons, scroll progress bar, split-text hero reveal, terminal
- * typewriter, animated stat counters, pinned horizontal workflow scroll,
- * scroll-triggered stagger reveals, mouse-tracked card glow) is rebuilt on
- * gsap.context() + ScrollTrigger so it mounts/unmounts cleanly with React
- * Router instead of leaking listeners like a plain <script> would.
- *
- * Fonts: this page loads Schibsted Grotesk (display/body) + Spline Sans
- * Mono (code/labels) from Google Fonts and scopes them to `.dr-landing`
- * only — the rest of the app keeps Geist / JetBrains Mono untouched.
- *
- * Route: public, mounted at "/" in App.jsx (already outside RequireAuth).
- * Icons: Font Awesome, already loaded globally in index.html.
- */
-
 const FEATURES = [
   {
     icon: "fa-solid fa-user-shield",
@@ -60,7 +42,7 @@ const ARCH = [
   { tag: "FRONTEND", icon: "fa-brands fa-react", title: "React + Vite", body: "Component tree for every workspace view — dashboard, chat, AI panel, vault — with Vite's HMR for fast local iteration." },
   { tag: "BACKEND", icon: "fa-solid fa-server", title: "Appwrite", body: "Auth, database (6 collections), file storage, and Teams-based permissions — no custom backend server to maintain." },
   { tag: "REALTIME", icon: "fa-solid fa-tower-broadcast", title: "Appwrite Realtime (WebSockets)", body: "Powers live chat, typing indicators, presence, and the notification feed — subscriptions, not polling loops." },
-  { tag: "AI", icon: "fa-solid fa-bolt", title: "Groq · Llama 3.3 70B", body: "Served via an Appwrite Cloud Function so the API key never touches the client — inference for the in-app AI workspace." },
+  { tag: "AI", icon: "fa-solid fa-bolt", title: "Groq · GPT-OSS 120B", body: "Served via an Appwrite Cloud Function so the API key never touches the client — inference for the in-app AI workspace." },
   { tag: "STYLING", icon: "fa-brands fa-css3-alt", title: "Tailwind CSS", body: "Utility-first styling with a custom design-token config — colors, spacing, and typography scale defined once, reused everywhere." },
   { tag: "HOSTING", icon: "fa-solid fa-cloud-arrow-up", title: "Vercel", body: "Static frontend deploy with preview builds on every push — Appwrite Cloud handles everything stateful." },
 ];
@@ -85,11 +67,9 @@ const CODE_LINES = [
 export default function Landing() {
   const navigate = useNavigate();
   const rootRef = useRef(null);
-  const trackRef = useRef(null);
   const dotRef = useRef(null);
   const ringRef = useRef(null);
   const termResultRef = useRef(null);
-  const stepCounterRef = useRef(null);
 
   // --- custom cursor (desktop only, matches prototype's mousemove + lerp ring) ---
   useEffect(() => {
@@ -258,32 +238,14 @@ export default function Landing() {
         });
       });
 
-      // pinned horizontal workflow scroll
-      const track = trackRef.current;
-      if (track) {
-        const steps = gsap.utils.toArray(".dr-flow-step");
-        const getDist = () => track.scrollWidth - window.innerWidth + 64;
-        gsap.to(track, {
-          x: () => -getDist(),
-          ease: "none",
-          scrollTrigger: {
-            trigger: ".dr-flow-pin",
-            start: "top top",
-            end: () => "+=" + (getDist() + window.innerHeight * 0.5),
-            scrub: 0.6,
-            pin: ".dr-flow-stage",
-            anticipatePin: 1,
-            onUpdate: (self) => {
-              gsap.set(".dr-flow-progress-bar", { width: self.progress * 100 + "%" });
-              const idx = Math.min(steps.length - 1, Math.floor(self.progress * steps.length));
-              steps.forEach((s, i) => s.classList.toggle("dr-flow-active", i === idx));
-              if (stepCounterRef.current) stepCounterRef.current.textContent = String(idx + 1).padStart(2, "0");
-            },
-          },
-        });
+      // Fonts / late-loading content can change layout after the initial
+      // measure. Re-measure once everything has actually settled so scroll
+      // positions for the reveal animations above stay accurate.
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+      if (document.fonts?.ready) {
+        document.fonts.ready.then(() => ScrollTrigger.refresh());
       }
-
-      ScrollTrigger.refresh();
+      window.addEventListener("load", () => ScrollTrigger.refresh());
     }, rootRef);
 
     const onResize = () => ScrollTrigger.refresh();
@@ -310,7 +272,7 @@ export default function Landing() {
           <a href="#features">Features</a>
           <a href="#workflow">How it works</a>
           <a href="#stack">Stack</a>
-          <a href="https://github.com/" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-github" /> Source</a>
+          <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-github" /> Source</a>
         </div>
         <div className="dr-nav-right">
           <button onClick={() => navigate("/dashboard")} className="dr-signin">Sign in</button>
@@ -341,7 +303,7 @@ export default function Landing() {
                 </button>
               </span>
               <span className="dr-magnetic">
-                <a href="https://github.com/" target="_blank" rel="noopener noreferrer" className="dr-btn dr-btn-ghost dr-big">
+                <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer" className="dr-btn dr-btn-ghost dr-big">
                   <i className="fa-brands fa-github" /> View source
                 </a>
               </span>
@@ -412,7 +374,7 @@ export default function Landing() {
                 <div className="dr-feat-icon" style={{ marginBottom: 0 }}><i className="fa-solid fa-robot" /></div>
                 <div>
                   <h3 style={{ marginBottom: 4 }}>AI Workspace</h3>
-                  <p style={{ maxWidth: 520 }}>An in-app assistant running on Groq's Llama-3.3-70B — ask questions about the project without leaving the workspace.</p>
+                  <p style={{ maxWidth: 520 }}>An in-app assistant running on Groq's GPT-OSS 120B — ask questions about the project without leaving the workspace.</p>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
@@ -424,29 +386,19 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------- WORKFLOW (pinned horizontal scroll) ---------- */}
+      {/* ---------- WORKFLOW ---------- */}
       <section id="workflow">
-        <div className="dr-wrap" style={{ marginBottom: 40 }}>
+        <div className="dr-wrap">
           <div className="dr-sec-eyebrow dr-reveal-eyebrow">WORKFLOW</div>
-          <h2 className="dr-reveal-up" style={{ marginBottom: 0 }}>From sign-in to shipped.</h2>
-        </div>
-        <div className="dr-flow-pin">
-          <div className="dr-flow-stage">
-            <div className="dr-wrap dr-flow-eyebrow-fixed dr-sec-eyebrow" style={{ margin: 0 }}>
-              STEP <span ref={stepCounterRef}>01</span> / 04
-            </div>
-            <div className="dr-flow-track" ref={trackRef}>
-              {STEPS.map((s, i) => (
-                <div className={`dr-flow-step${i === 0 ? " dr-flow-active" : ""}`} key={s.n}>
-                  <div className="dr-flow-num">{s.n}</div>
-                  <h3>{s.title}</h3>
-                  <p>{s.body}</p>
-                </div>
-              ))}
-            </div>
-            <div className="dr-wrap dr-flow-progress-wrap" style={{ left: "auto", right: "auto", position: "absolute" }}>
-              <div className="dr-flow-progress-bar" />
-            </div>
+          <h2 className="dr-reveal-up">From sign-in to shipped.</h2>
+          <div className="dr-flow-grid">
+            {STEPS.map((s, i) => (
+              <div className="dr-flow-card dr-reveal-up" key={s.n} style={{ transitionDelay: `${i * 0.06}s` }}>
+                <div className="dr-flow-num">{s.n}</div>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -624,17 +576,13 @@ const DR_STYLES = `
 .dr-feat-card:hover .dr-feat-glow{ opacity:1; }
 @media(max-width:900px){ .dr-feat-grid{ grid-template-columns:1fr; } }
 
-.dr-flow-pin{ height:420vh; position:relative; }
-.dr-flow-stage{ position:sticky; top:0; height:100vh; display:flex; flex-direction:column; justify-content:center; overflow:hidden; }
-.dr-flow-track{ display:flex; align-items:center; }
-.dr-flow-step{ min-width:min(560px,88vw); padding:0 40px; flex-shrink:0; }
-.dr-flow-num{ font-family:var(--dr-mono); font-size:100px; font-weight:800; color:transparent; -webkit-text-stroke:1px var(--dr-line-2); line-height:1; margin-bottom:20px; }
-.dr-flow-step.dr-flow-active .dr-flow-num{ -webkit-text-stroke:1px var(--dr-cyan); }
-.dr-flow-step h3{ font-size:30px; font-weight:700; margin-bottom:14px; }
-.dr-flow-step p{ color:var(--dr-text-dim); font-size:15.5px; max-width:420px; line-height:1.7; }
-.dr-flow-progress-wrap{ position:absolute; bottom:60px; left:32px; right:32px; height:2px; background:var(--dr-line); }
-.dr-flow-progress-bar{ height:100%; width:0%; background:linear-gradient(90deg,var(--dr-cyan),var(--dr-violet)); }
-.dr-flow-eyebrow-fixed{ position:absolute; top:60px; left:32px; }
+.dr-flow-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:16px; }
+.dr-flow-card{ background:var(--dr-panel); border:1px solid var(--dr-line); border-radius:14px; padding:32px 28px; }
+.dr-flow-num{ font-family:var(--dr-mono); font-size:44px; font-weight:800; color:var(--dr-cyan); line-height:1; margin-bottom:18px; }
+.dr-flow-card h3{ font-size:19px; font-weight:700; margin-bottom:10px; }
+.dr-flow-card p{ color:var(--dr-text-dim); font-size:14.5px; line-height:1.65; }
+@media(max-width:980px){ .dr-flow-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:600px){ .dr-flow-grid{ grid-template-columns:1fr; } }
 
 .dr-arch-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .dr-arch-card{ background:var(--dr-panel); border:1px solid var(--dr-line); border-radius:12px; padding:26px; opacity:0; transform:translateY(30px); position:relative; }

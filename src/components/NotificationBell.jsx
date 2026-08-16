@@ -4,7 +4,17 @@ import { useNotifications } from "../hooks/useNotifications";
 import { notificationIcon } from "../lib/notifications";
 import { relativeTime } from "../lib/format";
 import { mi } from "../lib/icons";
+import ErrorBoundary from "./ErrorBoundary";
+
 export default function NotificationBell() {
+    return (
+        <ErrorBoundary fallback="inline">
+            <NotificationBellInner />
+        </ErrorBoundary>
+    );
+}
+
+function NotificationBellInner() {
     const navigate = useNavigate();
     const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
     const [open, setOpen] = useState(false);

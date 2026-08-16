@@ -1,6 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
 import { useParams, useNavigate } from "react-router-dom";
 import usePageEntrance from "../hooks/usePageEntrance";
+import { useToast } from "../components/Toast";
+import { useConfirm, usePrompt } from "../components/Dialog";
 import { useResources } from "../hooks/useResources";
 import { useProject } from "../hooks/useProjects";
 import { useUser, useAuth } from "../context/UserContext";
@@ -15,6 +18,9 @@ export default function ResourceVault() {
   const navigate = useNavigate();
   const { project } = useProject(projectId);
   usePageEntrance();
+  const toast = useToast();
+  const confirm = useConfirm();
+  const prompt = usePrompt();
   const currentUser = useUser();
   const { logout } = useAuth();
   const [currentFolder, setCurrentFolder] = useState(null);
@@ -34,10 +40,32 @@ export default function ResourceVault() {
   } = useResources(projectId, currentFolder?.id || null);
 
   const fileInputRef = useRef(null);
+  const dropzoneRef = useRef(null);
+  const dragTweenRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  const [justUploaded, setJustUploaded] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [previewFile, setPreviewFile] = useState(null);
+
+  // Drag-over: looping border pulse instead of a static highlight.
+  useEffect(() => {
+    if (!dropzoneRef.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (dragOver) {
+      dragTweenRef.current = gsap.to(dropzoneRef.current, {
+        boxShadow: "0 0 0 3px rgba(138,235,255,0.25)",
+        duration: 0.6,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+    } else {
+      dragTweenRef.current?.kill();
+      gsap.set(dropzoneRef.current, { boxShadow: "none" });
+    }
+    return () => dragTweenRef.current?.kill();
+  }, [dragOver]);
 
   async function handleFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
@@ -46,35 +74,42 @@ export default function ResourceVault() {
       for (const file of Array.from(fileList)) {
         await uploadFile(file);
       }
-    } catch (err) {
-      alert(err.message || "Upload failed.");
-    } finally {
       setUploading(false);
+      setJustUploaded(true);
+      toast.show(`${fileList.length} file${fileList.length === 1 ? "" : "s"} uploaded.`, { type: "success" });
+      setTimeout(() => setJustUploaded(false), 1600);
+    } catch (err) {
+      setUploading(false);
+      toast.show(err.message || "Upload failed.", { type: "error" });
     }
   }
 
   async function handleCreateFolder() {
-    const name = window.prompt("Folder name");
+    const name = await prompt({ title: "New folder", placeholder: "e.g. Design assets", confirmLabel: "Create" });
     if (!name || !name.trim()) return;
     try {
       await createFolder(name.trim());
+      toast.show(`Folder "${name.trim()}" created.`, { type: "success" });
     } catch (err) {
-      alert(err.message || "Failed to create folder.");
+      toast.show(err.message || "Failed to create folder.", { type: "error" });
     }
   }
 
   async function handleDeleteFile(e, file) {
     e.stopPropagation();
-    if (!window.confirm(`Delete "${file.name}"?`)) return;
+    const ok = await confirm({ title: `Delete "${file.name}"?`, tone: "danger", confirmLabel: "Delete" });
+    if (!ok) return;
     try {
       await deleteFile(file);
+      toast.show(`"${file.name}" deleted.`, { type: "info" });
     } catch (err) {
-      alert(err.message || "Failed to delete file.");
+      toast.show(err.message || "Failed to delete file.", { type: "error" });
     }
   }
 
   async function handleLogout() {
-    if (!window.confirm("Log out of DevRoom OS?")) return;
+    const ok = await confirm({ title: "Log out of DevRoom OS?" });
+    if (!ok) return;
     await logout();
   }
 
@@ -168,9 +203,9 @@ export default function ResourceVault() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-colors shadow-lg shadow-primary/10 active:scale-95 disabled:opacity-50">
-              <i className={`${mi("upload_file")} text-[18px]`} />
-                {uploading ? "UPLOADING…" : "UPLOAD RESOURCE"}
+              className="relative flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-colors shadow-lg shadow-primary/10 active:scale-95 disabled:opacity-50">
+              {justUploaded ? <UploadCheckmark /> : <i className={`${mi("upload_file")} text-[18px]`} />}
+                {uploading ? "UPLOADING…" : justUploaded ? "UPLOADED" : "UPLOAD RESOURCE"}
             </button>
             <input
               ref={fileInputRef}
@@ -189,7 +224,7 @@ export default function ResourceVault() {
     className="flex-shrink-0 w-48 p-4 rounded-xl file-card flex flex-col gap-3 group cursor-pointer relative"
   >
       <button
-        onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete folder "${folder.name}"?`)) deleteFolder(folder.$id); }}
+        onClick={(e) => { e.stopPropagation(); confirm({ title: `Delete folder "${folder.name}"?`, tone: "danger", confirmLabel: "Delete" }).then((ok) => { if (ok) deleteFolder(folder.$id); }); }}
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-error transition-opacity"
       >
         <i className={`${mi("close")} text-[16px]`} />
@@ -210,6 +245,7 @@ export default function ResourceVault() {
 )}
             </div>
             <div
+              ref={dropzoneRef}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
@@ -333,5 +369,34 @@ export default function ResourceVault() {
         </div>
     </div>
     </>
+  );
+}
+
+/** Small SVG checkmark that draws itself in via stroke-dashoffset, shown
+ * briefly on the upload button right after a successful upload. */
+function UploadCheckmark() {
+  const pathRef = useRef(null);
+  useEffect(() => {
+    const el = pathRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(el, { strokeDashoffset: 0 });
+      return;
+    }
+    const len = el.getTotalLength();
+    gsap.set(el, { strokeDasharray: len, strokeDashoffset: len });
+    gsap.to(el, { strokeDashoffset: 0, duration: 0.45, ease: "power2.out" });
+  }, []);
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path
+        ref={pathRef}
+        d="M4 12.5L9.5 18L20 6"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

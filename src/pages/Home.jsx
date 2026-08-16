@@ -1,9 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { Flip } from "gsap/Flip";
 import { useNavigate } from "react-router-dom";
 import usePageEntrance from "../hooks/usePageEntrance";
 import { useProjects } from "../hooks/useProjects";
 import { SkeletonProjectCard, SkeletonListRow } from "../components/Skeleton";
+import { useToast } from "../components/Toast";
+import { useConfirm } from "../components/Dialog";
+
+gsap.registerPlugin(Flip);
 import { useUser, useAuth } from "../context/UserContext";
 import ProjectFormModal from "../components/ProjectFormModal";
 import NotificationBell from "../components/NotificationBell";
@@ -57,9 +62,30 @@ export default function Home() {
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
   const searchInputRef = useRef(null);
   const gridRef = useRef(null);
+  const prevViewMode = useRef(viewMode);
+
+  // FLIP transition when toggling grid <-> list: capture card positions
+  // before the layout-changing className swap, then let GSAP tween from the
+  // old positions to the new ones instead of an instant snap.
+  function handleViewModeChange(mode) {
+    if (mode === viewMode || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setViewMode(mode);
+      return;
+    }
+    const cards = gridRef.current ? [...gridRef.current.querySelectorAll(".project-card")] : [];
+    const state = Flip.getState(cards);
+    setViewMode(mode);
+    requestAnimationFrame(() => {
+      Flip.from(state, { duration: 0.45, ease: "power2.inOut", stagger: 0.02, absolute: true });
+    });
+  }
 
   useEffect(() => {
     if (loading || !gridRef.current) return;
+    if (prevViewMode.current !== viewMode) {
+      prevViewMode.current = viewMode;
+      return; // handled by the FLIP transition above
+    }
     const cards = gridRef.current.querySelectorAll(".project-card");
     if (cards.length === 0) return;
     gsap.fromTo(
@@ -70,6 +96,8 @@ export default function Home() {
   }, [loading, viewMode]);
 
   usePageEntrance([loading]);
+  const toast = useToast();
+  const confirm = useConfirm();
 
   useEffect(() => {
     if (!loading) setLastSyncedAt(new Date());
@@ -108,9 +136,9 @@ export default function Home() {
     window.open(url, "_blank", "noopener,noreferrer");
     try {
       await navigator.clipboard.writeText(url);
-      alert("VS Code opened in a new tab — link copied, share it with your team so everyone can join.");
+      toast.show("VS Code opened in a new tab — link copied to share with your team.", { type: "success" });
     } catch {
-      alert(`VS Code opened in a new tab — share this link with your team: ${url}`);
+      toast.show(`VS Code opened in a new tab — share this link: ${url}`, { type: "info" });
     }
   }
 
@@ -120,7 +148,7 @@ export default function Home() {
   }
 
   async function handleLogout() {
-    if (!window.confirm("Log out of DevRoom OS?")) return;
+    if (!(await confirm({ title: "Log out of DevRoom OS?" }))) return;
     await logout();
   }
 
@@ -132,17 +160,24 @@ export default function Home() {
 
   async function handleDelete(e, project) {
     e.stopPropagation();
-    if (!window.confirm(`Delete "${project.name}"? This can't be undone.`)) return;
+    const ok = await confirm({
+      title: `Delete "${project.name}"?`,
+      message: "This can't be undone.",
+      tone: "danger",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     try {
       await deleteProject(project.$id);
+      toast.show(`"${project.name}" deleted.`, { type: "info" });
     } catch (err) {
-      alert(err.message || "Failed to delete project.");
+      toast.show(err.message || "Failed to delete project.", { type: "error" });
     }
   }
 
   function handlePinToggle(e, project) {
     e.stopPropagation();
-    togglePin(project.$id).catch((err) => alert(err.message || "Failed to update pin."));
+    togglePin(project.$id).catch((err) => toast.show(err.message || "Failed to update pin.", { type: "error" }));
   }
 
   return (
@@ -213,8 +248,9 @@ export default function Home() {
                   if (!file) return;
                   try {
                     await user.setAvatarFile(file);
+                    toast.show("Avatar updated.", { type: "success" });
                   } catch (err) {
-                    alert(err.message || "Failed to upload avatar.");
+                    toast.show(err.message || "Failed to upload avatar.", { type: "error" });
                   }
                   e.target.value = "";
                 }}
@@ -332,10 +368,10 @@ export default function Home() {
                 <h4 className="font-headline-md text-headline-md text-white">Recent Projects</h4>
                 <div className="flex items-center gap-2">
                   <div className="flex bg-surface-container-low rounded-lg p-1 border border-outline-variant/10">
-                    <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-surface-variant text-primary" : "text-on-surface-variant hover:text-on-surface"}`}>
+                    <button onClick={() => handleViewModeChange("grid")} className={`p-1.5 rounded transition-colors ${viewMode === "grid" ? "bg-surface-variant text-primary" : "text-on-surface-variant hover:text-on-surface"}`}>
                       <i className={`${mi("grid_view")} text-[18px]`} />
                     </button>
-                    <button onClick={() => setViewMode("list")} className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-surface-variant text-primary" : "text-on-surface-variant hover:text-on-surface"}`}>
+                    <button onClick={() => handleViewModeChange("list")} className={`p-1.5 rounded transition-colors ${viewMode === "list" ? "bg-surface-variant text-primary" : "text-on-surface-variant hover:text-on-surface"}`}>
                       <i className={`${mi("list")} text-[18px]`} />
                     </button>
                   </div>

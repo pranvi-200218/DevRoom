@@ -36,6 +36,13 @@ export default async({ req, res, log, error }) => {
         ...(trimmedHistory.length > 0 ? trimmedHistory : [{ role: "user", content: prompt }]),
     ];
 
+    // Groq deprecated llama-3.3-70b-versatile (announced June 17, 2026,
+    // decommissioned August 16, 2026 — see https://console.groq.com/docs/deprecations).
+    // openai/gpt-oss-120b is Groq's official recommended replacement.
+    // GROQ_MODEL env var lets this be swapped without a redeploy if Groq
+    // deprecates this one too.
+    const model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+
     try {
         const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -44,7 +51,7 @@ export default async({ req, res, log, error }) => {
                 "Authorization": `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
+                model,
                 max_tokens: 1024,
                 messages,
             }),

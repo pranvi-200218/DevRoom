@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { gsap } from "gsap";
 import { useParams, useNavigate } from "react-router-dom";
 import usePageEntrance from "../hooks/usePageEntrance";
+import { useToast } from "../components/Toast";
+import { useConfirm } from "../components/Dialog";
 import { useProject, useProjects } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
 import { syncProjectAccess } from "../lib/syncProjectAccess";
@@ -12,6 +15,9 @@ export default function ProjectSettings() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const currentUser = useUser();
+  const toast = useToast();
+  const confirm = useConfirm();
+  const dangerZoneRef = useRef(null);
   const { project, loading, error } = useProject(projectId);
   usePageEntrance([loading]);
   const { updateProject, deleteProject } = useProjects();
@@ -35,8 +41,10 @@ export default function ProjectSettings() {
     try {
       await syncProjectAccess(projectId);
       setRepairResult("Access permissions repaired successfully.");
+      toast.show("Access permissions repaired.", { type: "success" });
     } catch (err) {
       setRepairResult(`Repair failed: ${err.message}`);
+      toast.show("Repair failed.", { type: "error" });
     } finally {
       setRepairing(false);
     }
@@ -61,6 +69,7 @@ export default function ProjectSettings() {
     try {
       await updateProject(projectId, { name: name.trim(), description: description.trim(), icon });
       setSaved(true);
+      toast.show("Project settings saved.", { type: "success" });
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       setFormError(err.message || "Failed to save changes.");
@@ -69,15 +78,29 @@ export default function ProjectSettings() {
     }
   }
 
+  function shakeDangerZone() {
+    if (!dangerZoneRef.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.fromTo(
+      dangerZoneRef.current,
+      { x: 0 },
+      { x: 10, duration: 0.08, repeat: 5, yoyo: true, ease: "power1.inOut", clearProps: "x" }
+    );
+  }
+
   async function handleDelete() {
-    if (!isOwner) return;
-    if (!window.confirm(`Delete "${project.name}"? This can't be undone.`)) return;
+    if (!isOwner) {
+      shakeDangerZone();
+      return;
+    }
+    const ok = await confirm({ title: `Delete "${project.name}"?`, message: "This can't be undone.", tone: "danger", confirmLabel: "Delete" });
+    if (!ok) return;
     setDeleting(true);
     try {
       await deleteProject(projectId);
       navigate("/dashboard");
     } catch (err) {
-      alert(err.message || "Failed to delete project.");
+      toast.show(err.message || "Failed to delete project.", { type: "error" });
+      shakeDangerZone();
       setDeleting(false);
     }
   }
@@ -186,7 +209,7 @@ export default function ProjectSettings() {
         {repairResult && <p className="text-xs mt-3 text-on-surface-variant">{repairResult}</p>}
       </div>
 
-      <div className="glass rounded-xl p-6 border border-error/20">
+      <div ref={dangerZoneRef} className="glass rounded-xl p-6 border border-error/20">
         <h3 className="text-error font-bold text-sm mb-1">Danger Zone</h3>
         <p className="text-on-surface-variant text-xs mb-4">
           Deleting a project removes it permanently. It does not currently delete its messages, files, or members —

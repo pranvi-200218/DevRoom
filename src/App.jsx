@@ -1,14 +1,16 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { lazy, Suspense, useLayoutEffect, useRef } from "react";
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
+import { gsap } from "gsap";
 import { UserProvider } from "./context/UserContext";
+import { ToastProvider } from "./components/Toast";
+import { DialogProvider } from "./components/Dialog";
+import ErrorBoundary from "./components/ErrorBoundary";
 import RequireAuth from "./components/RequireAuth";
 import RouteLoader from "./components/RouteLoader";
 
 // Route-level code splitting: each page is its own chunk, only fetched when
 // its route is actually visited. Landing stays eagerly imported since it's
-// the first thing almost every visitor sees — no point splitting it out
-// just to immediately re-request it. Cuts the old single ~680KB bundle
-// down into per-route chunks (see the Vite build warning this fixes).
+// the first thing almost every visitor sees.
 import Landing from "./pages/Landing";
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const JoinProject = lazy(() => import("./pages/JoinProject"));
@@ -20,17 +22,6 @@ const AIWorkspace = lazy(() => import("./pages/AIWorkspace"));
 const ResourceVault = lazy(() => import("./pages/ResourceVault"));
 const ProjectSettings = lazy(() => import("./pages/ProjectSettings"));
 
-// NOTE: each page below still renders its own full sidebar + topbar exactly
-// as authored in its source mockup (they weren't byte-identical to each
-// other — different nav items, active states, avatar art — so unifying them
-// into one shared <Layout> now would mean picking a winner and silently
-// redesigning the others). Real shared-layout + <Outlet/> nesting is the
-// next step, once sidebar state (active project, active tab) is wired to
-// actual data instead of hardcoded markup.
-
-// Small wrapper so RequireAuth only gates the routes nested under it,
-// instead of the whole router (which used to hide Landing/ResetPassword
-// behind a login wall even for logged-out visitors).
 function ProtectedLayout() {
   return (
     <RequireAuth>
@@ -39,33 +30,63 @@ function ProtectedLayout() {
   );
 }
 
+// Cross-fade between routes instead of a hard cut. Respects
+// prefers-reduced-motion (skips straight to the final state).
+function PageTransition({ children }) {
+  const location = useLocation();
+  const ref = useRef(null);
+
+  useLayoutEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!ref.current) return;
+    if (reduced) {
+      gsap.set(ref.current, { opacity: 1, y: 0 });
+      return;
+    }
+    const ctx = gsap.context(() => {
+      gsap.fromTo(ref.current, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" });
+    });
+    return () => ctx.revert();
+  }, [location.pathname]);
+
+  return <div ref={ref}>{children}</div>;
+}
+
 export default function App() {
   return (
     <UserProvider>
-      <BrowserRouter>
-        <Suspense fallback={<RouteLoader />}>
-          <Routes>
-            {/* Public routes — no auth required */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+      <ToastProvider>
+        <DialogProvider>
+          <BrowserRouter>
+            <Suspense fallback={<RouteLoader />}>
+              <PageTransition>
+                <ErrorBoundary>
+                  <Routes>
+                    {/* Public routes — no auth required */}
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Protected routes — RequireAuth renders <Login/> in place of
-                these if the visitor isn't signed in yet. */}
-            <Route element={<ProtectedLayout />}>
-              <Route path="/dashboard" element={<Home />} />
-              <Route path="/project/:projectId" element={<ProjectDashboard />} />
-              <Route path="/project/:projectId/members" element={<MemberManagement />} />
-              <Route path="/project/:projectId/chat" element={<TeamChat />} />
-              <Route path="/project/:projectId/ai" element={<AIWorkspace />} />
-              <Route path="/project/:projectId/resources" element={<ResourceVault />} />
-              <Route path="/project/:projectId/settings" element={<ProjectSettings />} />
-              <Route path="/join/:projectId" element={<JoinProject />} />
-            </Route>
+                    {/* Protected routes — RequireAuth renders <Login/> in place
+                        of these if the visitor isn't signed in yet. */}
+                    <Route element={<ProtectedLayout />}>
+                      <Route path="/dashboard" element={<Home />} />
+                      <Route path="/project/:projectId" element={<ProjectDashboard />} />
+                      <Route path="/project/:projectId/members" element={<MemberManagement />} />
+                      <Route path="/project/:projectId/chat" element={<TeamChat />} />
+                      <Route path="/project/:projectId/ai" element={<AIWorkspace />} />
+                      <Route path="/project/:projectId/resources" element={<ResourceVault />} />
+                      <Route path="/project/:projectId/settings" element={<ProjectSettings />} />
+                      <Route path="/join/:projectId" element={<JoinProject />} />
+                    </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </ErrorBoundary>
+              </PageTransition>
+            </Suspense>
+          </BrowserRouter>
+        </DialogProvider>
+      </ToastProvider>
     </UserProvider>
   );
 }

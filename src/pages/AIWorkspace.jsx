@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
 import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import usePageEntrance from "../hooks/usePageEntrance";
@@ -55,10 +56,28 @@ export default function AIWorkspace() {
 
   const [draft, setDraft] = useState("");
   const scrollRef = useRef(null);
+  const messageListRef = useRef(null);
+  const seenAiMsgIds = useRef(new Set());
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages.length, sending]);
+
+  useEffect(() => {
+    if (!messageListRef.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const fresh = [];
+    messages.forEach((msg) => {
+      if (!seenAiMsgIds.current.has(msg.$id)) {
+        seenAiMsgIds.current.add(msg.$id);
+        const el = messageListRef.current.querySelector(`[data-ai-msg-id="${msg.$id}"]`);
+        if (el) fresh.push(el);
+      }
+    });
+    if (fresh.length) {
+      gsap.fromTo(fresh, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, stagger: 0.08, ease: "power2.out" });
+    }
+  }, [messages]);
 
   async function handleSend(promptOverride) {
     const prompt = (promptOverride ?? draft).trim();
@@ -230,7 +249,7 @@ export default function AIWorkspace() {
       <main className="ml-sidebar-width h-[calc(100vh-64px)] flex">
         {/* Center: AI Conversation Area */}
         <section className="flex-1 flex flex-col min-w-0 bg-surface-container-lowest relative">
-          <div className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar space-y-10">
+          <div ref={messageListRef} className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar space-y-10">
             {loading && (
               <p className="text-sm text-on-surface-variant text-center">
                 Loading conversation…
@@ -263,6 +282,7 @@ export default function AIWorkspace() {
               msg.role === "user" ? (
                 <div
                   key={msg.$id}
+                  data-ai-msg-id={msg.$id}
                   className="max-w-3xl mx-auto w-full flex flex-col items-end"
                 >
                   <div className="glass-panel-ai p-5 rounded-2xl rounded-tr-none border-l-4 border-l-primary max-w-[90%] relative group">
@@ -283,6 +303,7 @@ export default function AIWorkspace() {
               ) : (
                 <div
                   key={msg.$id}
+                  data-ai-msg-id={msg.$id}
                   className="max-w-4xl mx-auto w-full space-y-4"
                 >
                   <div className="flex items-start gap-4">
@@ -336,7 +357,7 @@ export default function AIWorkspace() {
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 border border-primary/40 animate-pulse">
                   <i className={`${mi("smart_toy")} text-primary text-[20px]`} />
                 </div>
-                Thinking…
+                <span className="flex items-center gap-2">Thinking <ThinkingDots /></span>
               </div>
             )}
             <div ref={scrollRef} />
@@ -504,5 +525,23 @@ export default function AIWorkspace() {
         </aside>
       </main>
     </>
+  );
+}
+
+function ThinkingDots() {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const dots = ref.current.querySelectorAll("span");
+    const tl = gsap.timeline({ repeat: -1 });
+    tl.to(dots, { y: -4, duration: 0.28, stagger: 0.12, ease: "power1.inOut", yoyo: true, repeat: 1 });
+    return () => tl.kill();
+  }, []);
+  return (
+    <span ref={ref} className="flex items-center gap-0.5">
+      <span className="w-1 h-1 rounded-full bg-on-surface-variant inline-block" />
+      <span className="w-1 h-1 rounded-full bg-on-surface-variant inline-block" />
+      <span className="w-1 h-1 rounded-full bg-on-surface-variant inline-block" />
+    </span>
   );
 }

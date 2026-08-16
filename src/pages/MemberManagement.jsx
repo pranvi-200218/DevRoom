@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
 import usePageEntrance from "../hooks/usePageEntrance";
+import { useToast } from "../components/Toast";
+import { useConfirm } from "../components/Dialog";
 import { useMembers } from "../hooks/useMembers";
 import { useProject } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
@@ -35,6 +38,8 @@ function Avatar({ label, avatarUrl }) {
 export default function MemberManagement() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
+  const confirm = useConfirm();
   const currentUser = useUser();
   const { project } = useProject(projectId);
   const {
@@ -68,12 +73,11 @@ export default function MemberManagement() {
     const link = `${window.location.origin}/join/${projectId}`;
     try {
       await navigator.clipboard.writeText(link);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     } catch {
-      window.prompt("Copy this invite link:", link);
-      return;
+      toast.show(`Couldn't copy automatically — invite link: ${link}`, { type: "info", duration: 6000 });
     }
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
   }
 
   async function handleInvite(e) {
@@ -99,12 +103,32 @@ export default function MemberManagement() {
     }
   }
 
-  async function handleRemove(id) {
-    if (!window.confirm("Remove this member?")) return;
+  async function handleRoleChange(id, role, el) {
     try {
-      await removeMember(id);
+      await updateRole(id, role);
+      if (el && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        gsap.fromTo(el, { scale: 1.15, color: "#8aebff" }, { scale: 1, duration: 0.4, ease: "back.out(2)", clearProps: "color" });
+      }
+      toast.show(`Role updated to ${role}.`, { type: "success" });
     } catch (err) {
-      alert(err.message || "Failed to remove member.");
+      toast.show(err.message || "Failed to update role.", { type: "error" });
+    }
+  }
+
+  async function handleRemove(id) {
+    const ok = await confirm({ title: "Remove this member?", tone: "danger", confirmLabel: "Remove" });
+    if (!ok) return;
+    const row = document.querySelector(`[data-member-row="${id}"]`);
+    try {
+      if (row && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        await new Promise((resolve) => {
+          gsap.to(row, { opacity: 0, x: 24, duration: 0.3, ease: "power2.in", onComplete: resolve });
+        });
+      }
+      await removeMember(id);
+      toast.show("Member removed.", { type: "success" });
+    } catch (err) {
+      toast.show(err.message || "Failed to remove member.", { type: "error" });
     }
   }
 
@@ -300,7 +324,7 @@ export default function MemberManagement() {
   </td></tr>
 )}
 {!loading && !error && filteredMembers.map((member) => (
-  <tr key={member.$id} className="hover:bg-white/5 transition-colors group">
+  <tr key={member.$id} data-member-row={member.$id} className="hover:bg-white/5 transition-colors group">
       <td className="px-6 py-4">
           <div className="flex items-center gap-3">
               <Avatar label={member.name || member.email} avatarUrl={profiles[member.userId]?.avatarUrl} />
@@ -315,7 +339,7 @@ export default function MemberManagement() {
       <td className="px-6 py-4">
           <select
             value={member.role}
-            onChange={(e) => updateRole(member.$id, e.target.value)}
+            onChange={(e) => handleRoleChange(member.$id, e.target.value, e.target)}
             className="bg-transparent border-none focus:ring-0 text-body-sm text-on-surface hover:text-primary cursor-pointer p-0">
 {ROLES.map((r) => (
   <option key={r} value={r}>{r}</option>

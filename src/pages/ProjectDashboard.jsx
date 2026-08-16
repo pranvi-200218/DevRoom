@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { gsap } from "gsap";
 import { useParams, useNavigate } from "react-router-dom";
 import usePageEntrance from "../hooks/usePageEntrance";
+import { useToast } from "../components/Toast";
 import { useProject } from "../hooks/useProjects";
 import { useMembers } from "../hooks/useMembers";
 import { useResources } from "../hooks/useResources";
@@ -36,11 +38,47 @@ export default function ProjectDashboard() {
   const { activity, loading: activityLoading } = useActivity(projectId, 12);
 
   usePageEntrance([loading]);
+  const toast = useToast();
 
-  const [headerSearch, setHeaderSearch] = useState("");
+  const pctNumRef = useRef(null);
+  const pctBarRef = useRef(null);
+  const activityListRef = useRef(null);
+  const seenActivityIds = useRef(new Set());
 
   const totalMembers = activeMembers.length + pendingInvites.length;
   const onboardingPct = totalMembers > 0 ? Math.round((activeMembers.length / totalMembers) * 100) : 0;
+
+  useEffect(() => {
+    if (loading || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (pctBarRef.current) gsap.fromTo(pctBarRef.current, { width: "0%" }, { width: `${onboardingPct}%`, duration: 0.9, ease: "power2.out", delay: 0.15 });
+    if (pctNumRef.current) {
+      const obj = { val: 0 };
+      gsap.to(obj, {
+        val: onboardingPct,
+        duration: 0.9,
+        ease: "power2.out",
+        onUpdate: () => { pctNumRef.current.textContent = Math.round(obj.val); },
+      });
+    }
+  }, [loading, onboardingPct]);
+
+  useEffect(() => {
+    if (activityLoading || !activityListRef.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const fresh = [];
+    activity.forEach((a) => {
+      if (!seenActivityIds.current.has(a.$id)) {
+        seenActivityIds.current.add(a.$id);
+        const el = activityListRef.current.querySelector(`[data-activity-id="${a.$id}"]`);
+        if (el) fresh.push(el);
+      }
+    });
+    if (fresh.length) {
+      gsap.fromTo(fresh, { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.05, ease: "power2.out" });
+    }
+  }, [activityLoading, activity]);
+
+  const [headerSearch, setHeaderSearch] = useState("");
 
   const filesByType = useMemo(() => {
     const buckets = {};
@@ -65,7 +103,7 @@ export default function ProjectDashboard() {
     } else if (fileHit) {
       navigate(`/project/${projectId}/resources`);
     } else {
-      alert(`No matches for "${headerSearch.trim()}" in this project's members or files.`);
+      toast.show(`No matches for "${headerSearch.trim()}" in this project's members or files.`, { type: "info" });
     }
   }
 
@@ -181,7 +219,7 @@ export default function ProjectDashboard() {
                     <div className="relative z-10 flex flex-col h-full justify-between">
                         <div>
                             <span className="text-label-caps font-label-caps text-primary border border-primary/20 bg-primary/5 px-2 py-1 rounded">Team Onboarding</span>
-                            <h3 className="text-headline-md font-code-sm mt-4">{onboardingPct}<span className="text-lg text-on-surface-variant">% Active</span></h3>
+                            <h3 className="text-headline-md font-code-sm mt-4"><span ref={pctNumRef}>0</span><span className="text-lg text-on-surface-variant">% Active</span></h3>
                             <p className="text-on-surface-variant font-body-sm mt-2">
                               {totalMembers === 0
                                 ? "No team members yet — invite someone to get started."
@@ -190,7 +228,7 @@ export default function ProjectDashboard() {
                         </div>
                         <div className="mt-8">
                             <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                                <div className="bg-primary h-full primary-glow transition-all" style={{ width: `${onboardingPct}%` }}></div>
+                                <div ref={pctBarRef} className="bg-primary h-full primary-glow" style={{ width: `${onboardingPct}%` }}></div>
                             </div>
                             <div className="flex justify-between mt-3 text-label-caps font-label-caps text-on-surface-variant opacity-60">
                                 <span>Active: {activeMembers.length}</span>
@@ -295,7 +333,7 @@ export default function ProjectDashboard() {
                     <span className={`w-1.5 h-1.5 rounded-full ${activityLoading ? "bg-secondary animate-pulse" : "bg-primary"}`}></span> Recent Activity
                 </h3>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-5" ref={activityListRef}>
                 {activityLoading && (
                   <p className="text-on-surface-variant text-sm">Loading activity…</p>
                 )}
@@ -307,7 +345,7 @@ export default function ProjectDashboard() {
                 )}
                 {!activityLoading &&
                   activity.map((a) => (
-                    <div key={a.$id} className="flex gap-3 group">
+                    <div key={a.$id} data-activity-id={a.$id} className="flex gap-3 group">
                         <div className="shrink-0 mt-0.5 w-7 h-7 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary">
                             <span className="material-symbols-outlined text-[15px]">{activityIcon(a.type)}</span>
                         </div>

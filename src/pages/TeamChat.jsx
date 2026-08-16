@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { gsap } from "gsap";
 import usePageEntrance from "../hooks/usePageEntrance";
+import { useToast } from "../components/Toast";
 import { useMessages, usePresence } from "../hooks/useMessages";
 import { useProject } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
@@ -26,6 +28,9 @@ export default function TeamChat() {
   const user = useUser();
   const { project } = useProject(projectId);
   usePageEntrance();
+  const toast = useToast();
+  const seenMsgIds = useRef(new Set());
+  const messageListRef = useRef(null);
   const {
     messages,
     pinnedMessages,
@@ -66,6 +71,22 @@ export default function TeamChat() {
   }, []);
 
   const visibleMessages = showPinnedOnly ? pinnedMessages : messages;
+
+  useLayoutEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!messageListRef.current) return;
+    const fresh = [];
+    visibleMessages.forEach((msg) => {
+      if (!seenMsgIds.current.has(msg.$id)) {
+        seenMsgIds.current.add(msg.$id);
+        const el = messageListRef.current.querySelector(`[data-msg-id="${msg.$id}"]`);
+        if (el) fresh.push(el);
+      }
+    });
+    if (fresh.length) {
+      gsap.fromTo(fresh, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.06, ease: "power2.out" });
+    }
+  }, [visibleMessages]);
 
   const sharedLinks = useMemo(() => {
     const found = [];
@@ -124,7 +145,7 @@ export default function TeamChat() {
       setDraft("");
       setAttachment(null);
     } catch (err) {
-      alert(err.message || "Failed to send message.");
+      toast.show(err.message || "Failed to send message.", { type: "error" });
     } finally {
       setSending(false);
     }
@@ -172,7 +193,7 @@ export default function TeamChat() {
                 <i className={`${mi("settings")} text-lg`} />
                 <span className="font-body-sm text-body-sm">Settings</span>
             </a>
-            <div onClick={() => alert("No new notifications yet.")} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
+            <div onClick={() => toast.show("No new notifications yet.", { type: "info" })} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
                 <i className={`${mi("notifications")} text-lg`} />
                 <span className="font-body-sm text-body-sm">Notifications</span>
             </div>
@@ -238,11 +259,11 @@ export default function TeamChat() {
                     {showPinnedOnly ? "No pinned messages yet." : "No messages yet. Say hi 👋"}
                   </p>
                 )}
-                <div className="space-y-6 pb-10">
+                <div className="space-y-6 pb-10" ref={messageListRef}>
 {visibleMessages.map((msg) => {
   const isOwn = msg.authorId === user.$id;
   return (
-    <div key={msg.$id} className="flex gap-4 group">
+    <div key={msg.$id} data-msg-id={msg.$id} className="flex gap-4 group">
         <div className="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center mt-1 text-xs font-bold text-primary flex-shrink-0">
           {(msg.authorName || "?").slice(0, 2).toUpperCase()}
         </div>
@@ -281,9 +302,12 @@ export default function TeamChat() {
   );
 })}
 {typingUsers.length > 0 && (
-  <p className="text-xs text-on-surface-variant italic pl-14">
-    {typingUsers.map((t) => t.userName).join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing…
-  </p>
+  <div className="flex items-center gap-2 pl-14">
+    <span className="text-xs text-on-surface-variant italic">
+      {typingUsers.map((t) => t.userName).join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing
+    </span>
+    <TypingDots />
+  </div>
 )}
                 </div>
             </div>
@@ -406,5 +430,23 @@ export default function TeamChat() {
         </footer>
     </main>
     </>
+  );
+}
+
+function TypingDots() {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const dots = ref.current.querySelectorAll("span");
+    const tl = gsap.timeline({ repeat: -1 });
+    tl.to(dots, { y: -4, duration: 0.28, stagger: 0.12, ease: "power1.inOut", yoyo: true, repeat: 1 });
+    return () => tl.kill();
+  }, []);
+  return (
+    <span ref={ref} className="flex items-center gap-0.5">
+      <span className="w-1 h-1 rounded-full bg-on-surface-variant inline-block" />
+      <span className="w-1 h-1 rounded-full bg-on-surface-variant inline-block" />
+      <span className="w-1 h-1 rounded-full bg-on-surface-variant inline-block" />
+    </span>
   );
 }
