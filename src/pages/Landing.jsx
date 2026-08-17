@@ -270,8 +270,8 @@ export default function Landing() {
         <div className="dr-logo"><i className="fa-solid fa-terminal dr-chev" /> DevRoom</div>
         <div className="dr-nav-links">
           <a href="#features">Features</a>
-          <a href="#workflow">How it works</a>
-          <a href="#stack">Stack</a>
+          <a href="#workflow">WorkFlow</a>
+          <a href="#stack">Tech Stack</a>
           <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-github" /> Source</a>
         </div>
         <div className="dr-nav-right">
@@ -286,7 +286,7 @@ export default function Landing() {
       <header className="dr-hero">
         <div className="dr-wrap dr-hero-grid">
           <div>
-            <div className="dr-eyebrow"><span className="dr-dot" />$ whoami --team-workspace</div>
+            <div className="dr-eyebrow"><span className="dr-dot" />Collaborative Workspace for Developers</div>
             <h1 className="dr-hero-title">
               <span className="dr-line"><span>Stop losing track</span></span>
               <span className="dr-line"><span>of who did <em className="dr-highlight">what</em>,</span></span>
@@ -431,7 +431,7 @@ export default function Landing() {
             <div className="dr-cta-left">
               <div className="dr-sec-eyebrow" style={{ marginBottom: 20 }}>SEE IT RUNNING</div>
               <h2 style={{ marginBottom: 16 }}>See it running.</h2>
-              <p>Open the live workspace or check the source — every feature on this page is real code, not a mockup.</p>
+              <p>Open the live workspace or check the source-every feature on this page is real code, not a mockup.</p>
               <div className="dr-cta-row" style={{ opacity: 1 }}>
                 <span className="dr-magnetic">
                   <button onClick={() => navigate("/dashboard")} className="dr-btn dr-btn-primary dr-big">
@@ -450,7 +450,7 @@ export default function Landing() {
                 <div className="dr-term-dot" style={{ background: "#ff5f57" }} />
                 <div className="dr-term-dot" style={{ background: "#febc2e" }} />
                 <div className="dr-term-dot" style={{ background: "#28c840" }} />
-                <span style={{ marginLeft: 6 }}>devroom · live activity</span>
+                <span style={{ marginLeft: 6 }}>DevRoom-live activity</span>
               </div>
               <div className="dr-feed-list">
                 {FEED.map((f, i) => (
@@ -473,7 +473,7 @@ export default function Landing() {
       <footer className="dr-footer">
         <div className="dr-wrap" style={{ display: "flex", justifyContent: "space-between", width: "100%", flexWrap: "wrap", gap: 10 }}>
           <div className="dr-logo">DevRoom</div>
-          <div>© 2026 DevRoom · Built by Pranvi Srivastava.</div>
+          <div>© 2026 DevRoom · Built by Pranvi</div>
         </div>
       </footer>
     </div>
@@ -530,7 +530,7 @@ const DR_STYLES = `
 .dr-hero{ padding:170px 0 90px; position:relative; }
 .dr-hero-grid{ display:grid; grid-template-columns:1.05fr 1fr; gap:60px; align-items:start; }
 @media(max-width:980px){ .dr-hero-grid{ grid-template-columns:1fr; } }
-.dr-eyebrow{ font-family:var(--dr-mono); font-size:12.5px; color:var(--dr-cyan); letter-spacing:0.04em; display:flex; align-items:center; gap:10px; margin-bottom:26px; opacity:0; }
+.dr-eyebrow{ font-family:var(--dr-italic); font-size:12.5px; color:var(--dr-cyan); letter-spacing:0.04em; display:flex; align-items:center; gap:10px; margin-bottom:26px; opacity:0; }
 .dr-dot{ width:6px; height:6px; border-radius:50%; background:var(--dr-cyan); box-shadow:0 0 10px var(--dr-cyan); }
 .dr-hero-title{ font-family:var(--dr-sans); font-weight:800; font-size:clamp(38px,5vw,60px); line-height:1.06; letter-spacing:-0.02em; margin-bottom:24px; }
 .dr-line{ display:block; overflow:hidden; }
@@ -571,14 +571,14 @@ const DR_STYLES = `
 .dr-feat-icon{ width:38px; height:38px; border-radius:9px; background:var(--dr-cyan-dim); border:1px solid rgba(94,234,212,0.25); display:flex; align-items:center; justify-content:center; margin-bottom:20px; color:var(--dr-cyan); font-size:17px; }
 .dr-feat-card h3{ font-size:18px; font-weight:700; margin-bottom:10px; }
 .dr-feat-card p{ font-size:14px; line-height:1.65; color:var(--dr-text-dim); max-width:420px; }
-.dr-feat-tag{ font-family:var(--dr-mono); font-size:11.5px; color:var(--dr-text-faint); border-top:1px solid var(--dr-line); margin-top:24px; padding-top:16px; }
+.dr-feat-tag{ font-family:var(--dr-italic); font-size:11.5px; color:var(--dr-text-faint); border-top:1px solid var(--dr-line); margin-top:24px; padding-top:16px; }
 .dr-feat-glow{ position:absolute; width:220px; height:220px; border-radius:50%; background:radial-gradient(circle, rgba(94,234,212,0.12), transparent 70%); top:-80px; right:-80px; opacity:0; transition:opacity .4s; }
 .dr-feat-card:hover .dr-feat-glow{ opacity:1; }
 @media(max-width:900px){ .dr-feat-grid{ grid-template-columns:1fr; } }
 
 .dr-flow-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:16px; }
 .dr-flow-card{ background:var(--dr-panel); border:1px solid var(--dr-line); border-radius:14px; padding:32px 28px; }
-.dr-flow-num{ font-family:var(--dr-mono); font-size:44px; font-weight:800; color:var(--dr-cyan); line-height:1; margin-bottom:18px; }
+.dr-flow-num{ font-family:var(--dr-italic); font-size:44px; font-weight:800; color:var(--dr-cyan); line-height:1; margin-bottom:18px; }
 .dr-flow-card h3{ font-size:19px; font-weight:700; margin-bottom:10px; }
 .dr-flow-card p{ color:var(--dr-text-dim); font-size:14.5px; line-height:1.65; }
 @media(max-width:980px){ .dr-flow-grid{ grid-template-columns:repeat(2,1fr); } }
@@ -586,7 +586,7 @@ const DR_STYLES = `
 
 .dr-arch-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .dr-arch-card{ background:var(--dr-panel); border:1px solid var(--dr-line); border-radius:12px; padding:26px; opacity:0; transform:translateY(30px); position:relative; }
-.dr-arch-tag{ position:absolute; top:22px; right:22px; font-family:var(--dr-mono); font-size:10px; color:var(--dr-text-faint); letter-spacing:0.08em; }
+.dr-arch-tag{ position:absolute; top:22px; right:22px; font-family:var(--dr-italic); font-size:10px; color:var(--dr-text-faint); letter-spacing:0.08em; }
 .dr-arch-card h3{ font-size:16px; font-weight:700; margin:16px 0 10px; }
 .dr-arch-card p{ font-size:13.5px; color:var(--dr-text-dim); line-height:1.6; }
 .dr-arch-icon{ font-size:20px; }
@@ -597,12 +597,12 @@ const DR_STYLES = `
 .dr-cta-left h2{ margin-bottom:16px; }
 .dr-cta-left p{ color:var(--dr-text-dim); font-size:15px; line-height:1.7; margin-bottom:32px; max-width:400px; }
 .dr-cta-right{ background:var(--dr-panel-2); border-left:1px solid var(--dr-line); }
-.dr-feed-item{ display:flex; justify-content:space-between; gap:12px; padding:16px 22px; border-bottom:1px solid var(--dr-line); font-family:var(--dr-mono); font-size:12.5px; color:var(--dr-text-dim); opacity:0; transform:translateX(16px); }
+.dr-feed-item{ display:flex; justify-content:space-between; gap:12px; padding:16px 22px; border-bottom:1px solid var(--dr-line); font-family:var(--dr-italic); font-size:12.5px; color:var(--dr-text-dim); opacity:0; transform:translateX(16px); }
 .dr-feed-who{ color:var(--dr-cyan); }
 .dr-feed-time{ color:var(--dr-text-faint); flex-shrink:0; }
 @media(max-width:900px){ .dr-cta-split{ grid-template-columns:1fr; } .dr-cta-right{ border-left:none; border-top:1px solid var(--dr-line); } }
 
-.dr-footer{ border-top:1px solid var(--dr-line); padding:30px 0; display:flex; justify-content:space-between; font-family:var(--dr-mono); font-size:12px; color:var(--dr-text-faint); }
+.dr-footer{ border-top:1px solid var(--dr-line); padding:30px 0; display:flex; justify-content:space-between; font-family:var(--dr-italic); font-size:12px; color:var(--dr-text-faint); }
 .dr-footer .dr-logo{ font-size:13px; }
 @media(max-width:600px){ .dr-footer{ flex-direction:column; gap:10px; text-align:center; } }
 `;

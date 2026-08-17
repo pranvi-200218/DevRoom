@@ -173,7 +173,7 @@ export function useMessages(projectId, channelId = "general") {
     }, [projectId, channelId, user.$id]);
 
     const term = searchTerm.trim().toLowerCase();
-    const filteredMessages = term ? messages.filter((m) => m.text?.toLowerCase().includes(term)) : messages;
+    const filteredMessages = term ? messages.filter((m) => m.text && m.text.toLowerCase().includes(term)) : messages;
     const pinnedMessages = messages.filter((m) => m.pinned);
 
     return {
