@@ -367,7 +367,7 @@ export default function TeamChat() {
             <div className="max-w-4xl mx-auto glass-panel-chat border border-outline-variant/20 rounded-2xl shadow-2xl relative">
                 {/* Action Bar */}
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-outline-variant/5 bg-surface-container-lowest/50 rounded-t-2xl">
-                    <button onClick={() => wrapSelection("**")} title="Bold" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
+                    {/* <button onClick={() => wrapSelection("**")} title="Bold" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <i className={`${mi("format_bold")} text-lg`} />
 </button>
                     <button onClick={() => wrapSelection("_")} title="Italic" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
@@ -375,7 +375,7 @@ export default function TeamChat() {
 </button>
                     <button onClick={() => wrapSelection("`")} title="Code" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <i className={`${mi("code")} text-lg`} />
-</button>
+</button> */}
                     <div className="h-4 w-px bg-outline-variant/20 mx-1"></div>
                     <button onClick={() => fileInputRef.current?.click()} title="Attach file" className={`p-1.5 transition-all rounded hover:bg-surface-variant/30 ${attachment ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}>
 <i className={`${mi("attach_file")} text-lg`} />
