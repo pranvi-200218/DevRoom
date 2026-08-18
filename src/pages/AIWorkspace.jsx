@@ -11,6 +11,7 @@ import { useUser } from "../context/UserContext";
 import { relativeTime, fileVisual } from "../lib/format";
 import NotificationBell from "../components/NotificationBell";
 import { mi } from "../lib/icons";
+import Loader from "../components/Loader";
 const ROOM_DOTS = {
   frontend: "bg-cyan-400",
   backend: "bg-purple-400",
@@ -108,7 +109,7 @@ export default function AIWorkspace() {
       <aside className="gsap-sidebar w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 z-50">
         <div className="mb-10 px-2">
           <h1 className="font-headline-md text-headline-md font-extrabold text-primary tracking-tighter">
-            DevRoom OS
+            DevRoom
           </h1>
           <p className="text-on-surface-variant font-label-caps text-[10px] tracking-widest mt-1">
             ENGINEERING WORKSPACE
@@ -251,9 +252,7 @@ export default function AIWorkspace() {
         <section className="flex-1 flex flex-col min-w-0 bg-surface-container-lowest relative">
           <div ref={messageListRef} className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar space-y-10">
             {loading && (
-              <p className="text-sm text-on-surface-variant text-center">
-                Loading conversation…
-              </p>
+              <div className="flex justify-center"><Loader label="loading_conversation..." /></div>
             )}
             {!loading && error && (
               <p className="text-sm text-error text-center max-w-2xl mx-auto">
@@ -376,7 +375,7 @@ export default function AIWorkspace() {
                 ></textarea>
                 <div className="flex items-center gap-2 mb-1 mr-1">
                   <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-highest/50 border border-outline-variant/30 text-[10px] text-outline font-mono">
-                    <span>Claude</span>
+                    <span>Groq</span>
                   </div>
                   <button
                     onClick={() => handleSend()}
@@ -388,11 +387,11 @@ export default function AIWorkspace() {
                 </div>
               </div>
             </div>
-            <div className="max-w-4xl mx-auto flex justify-center mt-2">
+            {/* <div className="max-w-4xl mx-auto flex justify-center mt-2">
               <p className="text-[10px] text-outline uppercase tracking-[0.2em]">
                 DevRoom Engine v2.4.1 • Low Latency Mode
               </p>
-            </div>
+            </div> */}
           </div>
         </section>
         {/* Right: Context Panel */}

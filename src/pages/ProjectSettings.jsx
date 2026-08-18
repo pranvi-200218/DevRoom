@@ -8,6 +8,7 @@ import { useProject, useProjects } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
 import { syncProjectAccess } from "../lib/syncProjectAccess";
 import { mi } from "../lib/icons";
+import Loader from "../components/Loader";
 
 const ICONS = ["layers", "api", "terminal", "auto_awesome", "database", "rocket_launch", "bolt"];
 
@@ -107,8 +108,8 @@ export default function ProjectSettings() {
 
   if (loading) {
     return (
-      <div className="ml-sidebar-width min-h-screen flex items-center justify-center text-on-surface-variant">
-        Loading settings…
+      <div className="ml-sidebar-width min-h-screen flex items-center justify-center">
+        <Loader label="loading_settings..." size="lg" />
       </div>
     );
   }

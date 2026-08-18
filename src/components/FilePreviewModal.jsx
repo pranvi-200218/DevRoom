@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { formatBytes, relativeTime } from "../lib/format";
 import { mi } from "../lib/icons";
+import Loader from "./Loader";
 
 const TEXT_PREVIEWABLE = [
   "text/",
@@ -137,7 +138,7 @@ export default function FilePreviewModal({ file, url, onClose }) {
             <div className="w-full h-full p-5 overflow-auto">
               {textError && <p className="text-sm text-error">Couldn't load a preview for this file.</p>}
               {!textError && textContent === null && (
-                <p className="text-sm text-on-surface-variant">Loading preview…</p>
+                <Loader label="loading_preview..." />
               )}
               {!textError && textContent !== null && (
                 <pre className="font-code-sm text-code-sm text-on-surface whitespace-pre-wrap break-words">

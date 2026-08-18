@@ -12,6 +12,7 @@ import NotificationBell from "../components/NotificationBell";
 import FilePreviewModal from "../components/FilePreviewModal";
 import { SkeletonGrid, SkeletonFileCard, SkeletonFileRow } from "../components/Skeleton";
 import { mi } from "../lib/icons";
+import Loader from "../components/Loader";
 
 export default function ResourceVault() {
   const { projectId } = useParams();
@@ -120,7 +121,7 @@ export default function ResourceVault() {
     <>
     <aside className="gsap-sidebar w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low dark:bg-surface-container-low border-r border-outline-variant/10 flex flex-col h-full py-6 px-4 z-50">
         <div className="mb-10 px-2">
-            <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary">DevRoom OS</h1>
+            <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary">DevRoom</h1>
             <p className="font-body-sm text-body-sm opacity-50">Engineering Workspace</p>
         </div>
         <nav className="flex-1 space-y-1">
@@ -166,10 +167,9 @@ export default function ResourceVault() {
                     <i className={`${mi("search")} absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]`} />
                 </div>
                 <div className="flex items-center gap-2">
-                    <i className={`${mi("account_tree")} text-outline-variant/50 p-2`} title="Workspace" />
                     <i className={`${mi("cloud_done")} text-primary/60 p-2`} title="All changes saved" />
                     <NotificationBell />
-                    <div className="w-8 h-8 rounded-full bg-surface-variant ml-2 overflow-hidden border border-outline-variant/20">
+                    {/* <div className="w-8 h-8 rounded-full bg-surface-variant ml-2 overflow-hidden border border-outline-variant/20">
                         {currentUser.avatarUrl ? (
                           <img className="w-full h-full object-cover" alt={currentUser.name} src={currentUser.avatarUrl} />
                         ) : (
@@ -177,7 +177,7 @@ export default function ResourceVault() {
                             {(currentUser.name || "?")[0].toUpperCase()}
                           </div>
                         )}
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </header>
@@ -259,7 +259,7 @@ export default function ResourceVault() {
                 <h3 className="font-label-caps text-label-caps text-on-surface-variant mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Recent Uploads
                 </h3>
-                {loading && <p className="text-sm text-on-surface-variant">Loading…</p>}
+                {loading && <Loader label="loading..." />}
                 {!loading && error && <p className="text-sm text-error">{error}</p>}
                 {!loading && !error && recentFiles.length === 0 && (
                   <p className="text-sm text-on-surface-variant">No recent uploads. Drag a file above to get started.</p>

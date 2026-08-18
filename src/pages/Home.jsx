@@ -210,7 +210,6 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <i className={`${mi("account_tree")} text-outline-variant/50`} title="Workspace" />
             <i
               className={`${mi(error ? "cloud_off" : loading ? "cloud_sync" : "cloud_done")} ${error ? "text-error" : loading ? "text-outline-variant/50" : "text-primary/60"}`}
               title={error ? "Sync failed" : loading ? "Syncing..." : "All changes saved"}

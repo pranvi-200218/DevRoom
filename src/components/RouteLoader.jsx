@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { gsap } from "gsap";
+import Loader from "./Loader";
 
 /**
  * Suspense fallback for the lazy-loaded routes in App.jsx. Kept intentionally
@@ -15,8 +16,8 @@ export default function RouteLoader() {
     return () => ctx.revert();
   }, []);
   return (
-    <div ref={ref} className="dr-route-loader">
-      <div className="dr-spin" />
+    <div ref={ref}>
+      <Loader fullPage label="loading_route..." size="lg" />
     </div>
   );
 }

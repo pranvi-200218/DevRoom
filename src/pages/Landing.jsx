@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -39,12 +39,30 @@ const STEPS = [
 ];
 
 const ARCH = [
-  { tag: "FRONTEND", icon: "fa-brands fa-react", title: "React + Vite", body: "Component tree for every workspace view — dashboard, chat, AI panel, vault — with Vite's HMR for fast local iteration." },
-  { tag: "BACKEND", icon: "fa-solid fa-server", title: "Appwrite", body: "Auth, database (6 collections), file storage, and Teams-based permissions — no custom backend server to maintain." },
-  { tag: "REALTIME", icon: "fa-solid fa-tower-broadcast", title: "Appwrite Realtime (WebSockets)", body: "Powers live chat, typing indicators, presence, and the notification feed — subscriptions, not polling loops." },
-  { tag: "AI", icon: "fa-solid fa-bolt", title: "Groq · GPT-OSS 120B", body: "Served via an Appwrite Cloud Function so the API key never touches the client — inference for the in-app AI workspace." },
-  { tag: "STYLING", icon: "fa-brands fa-css3-alt", title: "Tailwind CSS", body: "Utility-first styling with a custom design-token config — colors, spacing, and typography scale defined once, reused everywhere." },
-  { tag: "HOSTING", icon: "fa-solid fa-cloud-arrow-up", title: "Vercel", body: "Static frontend deploy with preview builds on every push — Appwrite Cloud handles everything stateful." },
+  { tag: "FRONTEND", icon: "fa-brands fa-react", title: "React + Vite", body: "Component tree for every workspace view — dashboard, chat, AI panel, vault — with Vite's HMR for fast local iteration.", meta: "7 route-level views" },
+  { tag: "BACKEND", icon: "fa-solid fa-server", title: "Appwrite", body: "Auth, database (6 collections), file storage, and Teams-based permissions — no custom backend server to maintain.", meta: "6 collections · 3 buckets" },
+  { tag: "REALTIME", icon: "fa-solid fa-tower-broadcast", title: "Appwrite Realtime (WebSockets)", body: "Powers live chat, typing indicators, presence, and the notification feed — subscriptions, not polling loops.", meta: "0 polling loops" },
+  { tag: "AI", icon: "fa-solid fa-bolt", title: "Groq · GPT-OSS 120B", body: "Served via an Appwrite Cloud Function so the API key never touches the client — inference for the in-app AI workspace.", meta: "Key never hits client" },
+  { tag: "STYLING", icon: "fa-brands fa-css3-alt", title: "Tailwind CSS", body: "Utility-first styling with a custom design-token config — colors, spacing, and typography scale defined once, reused everywhere.", meta: "1 token config" },
+  { tag: "HOSTING", icon: "fa-solid fa-cloud-arrow-up", title: "Vercel", body: "Static frontend deploy with preview builds on every push — Appwrite Cloud handles everything stateful.", meta: "Preview build / push" },
+];
+
+const CHALLENGES = [
+  {
+    icon: "fa-solid fa-users-gear",
+    title: "Client-side SDKs can't grant cross-user permissions",
+    body: "Appwrite's client SDK blocks a logged-in user from writing permissions for someone else — which breaks 'invite a teammate' as a flow. Rebuilt access control on Appwrite Teams so membership, not per-document ACLs, drives who can see what.",
+  },
+  {
+    icon: "fa-solid fa-user-lock",
+    title: "Auth migrated mid-project without breaking existing sessions",
+    body: "Started on localStorage-based identity to move fast, then swapped in real Appwrite auth once multi-device access mattered — without a hard cutover that would've logged everyone out.",
+  },
+  {
+    icon: "fa-solid fa-envelope-circle-check",
+    title: "Invite links collided with existing accounts",
+    body: "Inviting an email that already had an account threw a 409 on signup. Fixed with a password-recovery-based join flow instead of a raw create-account call, so both new and existing users land in the same place.",
+  },
 ];
 
 const FEED = [
@@ -54,22 +72,12 @@ const FEED = [
   { icon: "fa-solid fa-robot", who: "", text: "AI workspace answered 2 prompts", time: "14m" },
 ];
 
-const CODE_LINES = [
-  [["kw", "import"], [" { Teams } "], ["kw", "from"], [" "], ["str", '"appwrite"'], [";"]],
-  [[""]],
-  [["kw", "const"], [" invite = "], ["kw", "await"], [" "], ["fn", "teams.createMembership"], ["({"]],
-  [["  projectId,"]],
-  [["  role: "], ["str", '"editor"'], [","]],
-  [["com", "  // self-heals if signup happens out of order"]],
-  [["});"]],
-];
-
 export default function Landing() {
   const navigate = useNavigate();
   const rootRef = useRef(null);
   const dotRef = useRef(null);
   const ringRef = useRef(null);
-  const termResultRef = useRef(null);
+  const [shotError, setShotError] = useState(false);
 
   // --- custom cursor (desktop only, matches prototype's mousemove + lerp ring) ---
   useEffect(() => {
@@ -154,23 +162,7 @@ export default function Landing() {
         .to(".dr-hero-title .dr-line span span", { yPercent: 0, duration: 1.1, stagger: 0.018 }, 0.25)
         .to(".dr-hero-sub", { opacity: 1, duration: 0.7 }, "-=0.5")
         .to(".dr-hero-cta", { opacity: 1, duration: 0.7 }, "-=0.5")
-        .fromTo(".dr-term", { opacity: 0, y: 40, rotateX: 8 }, { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: "power3.out" }, 0.5)
-        .add(() => typeTerminalResult(), "+=0.1");
-
-      function typeTerminalResult() {
-        const el = termResultRef.current;
-        if (!el) return;
-        const full = " member added · role synced · notified";
-        let i = 0;
-        const iv = setInterval(() => {
-          el.innerHTML =
-            '<span class="dr-term-num">9</span><i class="fa-solid fa-check dr-term-ok"></i><span class="dr-term-ok">' +
-            full.slice(0, i) +
-            '</span><span class="dr-term-cursor"></span>';
-          i++;
-          if (i > full.length) clearInterval(iv);
-        }, 22);
-      }
+        .fromTo(".dr-shot-frame", { opacity: 0, y: 40, rotateX: 8 }, { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: "power3.out" }, 0.5);
 
       // stat counters
       rootRef.current.querySelectorAll(".dr-stat-num").forEach((el) => {
@@ -267,7 +259,7 @@ export default function Landing() {
 
       {/* ---------- NAV ---------- */}
       <nav className="dr-nav">
-        <div className="dr-logo"><i className="fa-solid fa-terminal dr-chev" /> DevRoom</div>
+        <div className="dr-logo">DevRoom</div>
         <div className="dr-nav-links">
           <a href="#features">Features</a>
           <a href="#workflow">Workflow</a>
@@ -310,28 +302,28 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="dr-term">
+          <div className="dr-shot-frame">
             <div className="dr-term-bar">
               <div className="dr-term-dot" style={{ background: "#ff5f57" }} />
               <div className="dr-term-dot" style={{ background: "#febc2e" }} />
               <div className="dr-term-dot" style={{ background: "#28c840" }} />
-              <span style={{ marginLeft: 6 }}>devroom — invite.js</span>
+              <span style={{ marginLeft: 6 }}>devroom.app/project/nova</span>
             </div>
-            <div className="dr-term-body">
-              {CODE_LINES.map((tokens, i) => (
-                <div className="dr-term-line" key={i}>
-                  <span className="dr-term-num">{i + 1}</span>
-                  {tokens.map((t, j) =>
-                    Array.isArray(t) ? (
-                      <span key={j} className={t[0] ? `dr-tok-${t[0]}` : undefined}>{t[1] ?? t[0]}</span>
-                    ) : (
-                      <span key={j}>{t}</span>
-                    )
-                  )}
-                </div>
-              ))}
-              <div className="dr-term-line" ref={termResultRef}><span className="dr-term-num">9</span></div>
-            </div>
+            {/* Drop your real screenshot at DevRoom/public/product-screenshot.png — this swaps in automatically. */}
+            {shotError ? (
+              <div className="dr-shot-placeholder">
+                <i className="fa-solid fa-image" />
+                <span>Product screenshot goes here</span>
+                <span className="dr-shot-hint">public/product-screenshot.png</span>
+              </div>
+            ) : (
+              <img
+                src="/product-screenshot.png"
+                alt="DevRoom OS product screenshot"
+                className="dr-shot-img"
+                onError={() => setShotError(true)}
+              />
+            )}
           </div>
         </div>
 
@@ -415,9 +407,32 @@ export default function Landing() {
             {ARCH.map((a) => (
               <div className="dr-arch-card" key={a.title}>
                 <span className="dr-arch-tag">{a.tag}</span>
-                <span className="dr-arch-icon"><i className={a.icon} /></span>
+                <span className="dr-arch-icon-box"><i className={a.icon} /></span>
                 <h3>{a.title}</h3>
                 <p>{a.body}</p>
+                <div className="dr-arch-meta">{a.meta}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- CHALLENGES SOLVED ---------- */}
+      <section id="challenges">
+        <div className="dr-wrap">
+          <div className="dr-sec-eyebrow dr-reveal-eyebrow">ENGINEERING NOTES</div>
+          <h2 className="dr-reveal-up">Problems I actually had to solve.</h2>
+          <p className="dr-reveal-up" style={{ color: "var(--dr-text-dim)", fontSize: 15, marginTop: -36, marginBottom: 50, maxWidth: 560 }}>
+            Not a tutorial clone — here's what broke, and how it got fixed.
+          </p>
+          <div className="dr-challenge-list">
+            {CHALLENGES.map((c) => (
+              <div className="dr-challenge-item dr-reveal-up" key={c.title}>
+                <div className="dr-challenge-icon"><i className={c.icon} /></div>
+                <div>
+                  <h3>{c.title}</h3>
+                  <p>{c.body}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -430,8 +445,8 @@ export default function Landing() {
           <div className="dr-cta-split">
             <div className="dr-cta-left">
               <div className="dr-sec-eyebrow" style={{ marginBottom: 20 }}>SEE IT RUNNING</div>
-              <h2 style={{ marginBottom: 16 }}>See it running.</h2>
-              <p>Open the live workspace or check the source — every feature on this page is real code, not a mockup.</p>
+              <h2 style={{ marginBottom: 16 }}>Every feature here is real code.</h2>
+              <p>Open the live workspace or check the source — nothing on this page is a mockup.</p>
               <div className="dr-cta-row" style={{ opacity: 1 }}>
                 <span className="dr-magnetic">
                   <button onClick={() => navigate("/dashboard")} className="dr-btn dr-btn-primary dr-big">
@@ -439,10 +454,15 @@ export default function Landing() {
                   </button>
                 </span>
                 <span className="dr-magnetic">
-                  <a href="https://github.com/" target="_blank" rel="noopener noreferrer" className="dr-btn dr-btn-ghost dr-big">
+                  <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer" className="dr-btn dr-btn-ghost dr-big">
                     <i className="fa-brands fa-github" /> View Source
                   </a>
                 </span>
+              </div>
+              <div className="dr-cta-badges">
+                <span><i className="fa-solid fa-lock-open" /> Open source</span>
+                <span><i className="fa-solid fa-user" /> Built solo</span>
+                <span><i className="fa-solid fa-bolt" /> Live, not staged</span>
               </div>
             </div>
             <div className="dr-cta-right">
@@ -471,9 +491,49 @@ export default function Landing() {
 
       {/* ---------- FOOTER ---------- */}
       <footer className="dr-footer">
-        <div className="dr-wrap" style={{ display: "flex", justifyContent: "space-between", width: "100%", flexWrap: "wrap", gap: 10 }}>
-          <div className="dr-logo">DevRoom</div>
-          <div>© 2026 DevRoom · Built by Pranvi Srivastava.</div>
+        <div className="dr-wrap">
+          <div className="dr-footer-grid">
+            <div className="dr-footer-brand">
+              <div className="dr-logo">DevRoom</div>
+              <p>
+                Built solo by <b>Pranvi Srivastava</b> — B.Tech CSE, ABES Engineering College.
+                Frontend-focused, currently open to internships.
+              </p>
+              <div className="dr-footer-social">
+                <a href="https://github.com/pranvi-200218" target="_blank" rel="noopener noreferrer" title="GitHub">
+                  <i className="fa-brands fa-github" />
+                </a>
+                {/* Update with real profile URLs before sharing this link */}
+                <a href="#" target="_blank" rel="noopener noreferrer" title="LinkedIn">
+                  <i className="fa-brands fa-linkedin" />
+                </a>
+                <a href="#" target="_blank" rel="noopener noreferrer" title="Email">
+                  <i className="fa-solid fa-envelope" />
+                </a>
+              </div>
+            </div>
+
+            <div className="dr-footer-col">
+              <div className="dr-footer-heading">Product</div>
+              <a href="#features">Features</a>
+              <a href="#workflow">Workflow</a>
+              <a href="#stack">Tech Stack</a>
+              <a href="#challenges">Engineering Notes</a>
+            </div>
+
+            <div className="dr-footer-col">
+              <div className="dr-footer-heading">Connect</div>
+              <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer">Source Code</a>
+              <a href="#">LinkedIn</a>
+              <a href="#">Resume</a>
+              <a onClick={() => navigate("/dashboard")}>Open Workspace</a>
+            </div>
+          </div>
+
+          <div className="dr-footer-bottom">
+            <span>© 2026 DevRoom</span>
+            <span>Built with React, Appwrite &amp; GSAP</span>
+          </div>
         </div>
       </footer>
     </div>
@@ -554,6 +614,16 @@ const DR_STYLES = `
 .dr-term-cursor{ display:inline-block; width:7px; height:15px; background:var(--dr-cyan); vertical-align:middle; margin-left:2px; }
 .dr-term-ok{ color:#5eead4; }
 
+.dr-shot-frame{ background:var(--dr-panel); border:1px solid var(--dr-line-2); border-radius:12px; overflow:hidden;
+  box-shadow:0 30px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02); opacity:0; transform:perspective(1000px); }
+.dr-shot-img{ display:block; width:100%; height:auto; }
+.dr-shot-placeholder{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  min-height:340px; padding:40px 20px; color:var(--dr-text-faint); background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 14px); }
+.dr-shot-placeholder i{ font-size:28px; opacity:0.5; }
+.dr-shot-placeholder span{ font-family:var(--dr-sans); font-size:14px; }
+.dr-shot-hint{ font-family:var(--dr-mono); font-style:italic; font-size:12px; color:var(--dr-text-faint); opacity:0.7; }
+
 .dr-stats{ display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--dr-line); border-bottom:1px solid var(--dr-line); margin-top:90px; }
 .dr-stat{ padding:34px 32px; border-right:1px solid var(--dr-line); }
 .dr-stat:last-child{ border-right:none; }
@@ -585,24 +655,46 @@ const DR_STYLES = `
 @media(max-width:600px){ .dr-flow-grid{ grid-template-columns:1fr; } }
 
 .dr-arch-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.dr-arch-card{ background:var(--dr-panel); border:1px solid var(--dr-line); border-radius:12px; padding:26px; opacity:0; transform:translateY(30px); position:relative; }
+.dr-arch-card{ background:var(--dr-panel); border:1px solid var(--dr-line); border-radius:12px; padding:26px; opacity:0; transform:translateY(30px); position:relative; display:flex; flex-direction:column; }
 .dr-arch-tag{ position:absolute; top:22px; right:22px; font-family:var(--dr-mono); font-style:italic; font-size:10px; color:var(--dr-text-faint); letter-spacing:0.08em; }
 .dr-arch-card h3{ font-size:16px; font-weight:700; margin:16px 0 10px; }
-.dr-arch-card p{ font-size:13.5px; color:var(--dr-text-dim); line-height:1.6; }
-.dr-arch-icon{ font-size:20px; }
+.dr-arch-card p{ font-size:13.5px; color:var(--dr-text-dim); line-height:1.6; flex-grow:1; }
+.dr-arch-icon-box{ width:40px; height:40px; border-radius:10px; background:var(--dr-cyan-dim); display:flex; align-items:center; justify-content:center; font-size:17px; color:var(--dr-cyan); }
+.dr-arch-meta{ margin-top:18px; padding-top:14px; border-top:1px solid var(--dr-line); font-family:var(--dr-mono); font-style:italic; font-size:11.5px; color:var(--dr-text-faint); }
 @media(max-width:900px){ .dr-arch-grid{ grid-template-columns:1fr; } }
+
+.dr-challenge-list{ display:flex; flex-direction:column; gap:14px; }
+.dr-challenge-item{ display:flex; gap:20px; background:var(--dr-panel); border:1px solid var(--dr-line); border-radius:12px; padding:24px 26px; opacity:0; transform:translateY(30px); }
+.dr-challenge-icon{ flex-shrink:0; width:42px; height:42px; border-radius:10px; background:var(--dr-panel-2); border:1px solid var(--dr-line); display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--dr-cyan); }
+.dr-challenge-item h3{ font-size:15.5px; font-weight:700; margin-bottom:8px; }
+.dr-challenge-item p{ font-size:13.5px; color:var(--dr-text-dim); line-height:1.65; max-width:640px; }
+@media(max-width:600px){ .dr-challenge-item{ flex-direction:column; gap:14px; } }
 
 .dr-cta-split{ display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--dr-line-2); border-radius:16px; overflow:hidden; background:linear-gradient(160deg, var(--dr-panel), var(--dr-bg-2)); }
 .dr-cta-left{ padding:56px; }
 .dr-cta-left h2{ margin-bottom:16px; }
 .dr-cta-left p{ color:var(--dr-text-dim); font-size:15px; line-height:1.7; margin-bottom:32px; max-width:400px; }
+.dr-cta-badges{ display:flex; gap:18px; margin-top:28px; flex-wrap:wrap; }
+.dr-cta-badges span{ display:flex; align-items:center; gap:7px; font-family:var(--dr-mono); font-style:italic; font-size:12px; color:var(--dr-text-faint); }
+.dr-cta-badges i{ color:var(--dr-cyan); font-size:11px; }
 .dr-cta-right{ background:var(--dr-panel-2); border-left:1px solid var(--dr-line); }
 .dr-feed-item{ display:flex; justify-content:space-between; gap:12px; padding:16px 22px; border-bottom:1px solid var(--dr-line); font-family:var(--dr-mono); font-style:italic; font-size:12.5px; color:var(--dr-text-dim); opacity:0; transform:translateX(16px); }
 .dr-feed-who{ color:var(--dr-cyan); }
 .dr-feed-time{ color:var(--dr-text-faint); flex-shrink:0; }
 @media(max-width:900px){ .dr-cta-split{ grid-template-columns:1fr; } .dr-cta-right{ border-left:none; border-top:1px solid var(--dr-line); } }
 
-.dr-footer{ border-top:1px solid var(--dr-line); padding:30px 0; display:flex; justify-content:space-between; font-family:var(--dr-mono); font-style:italic; font-size:12px; color:var(--dr-text-faint); }
-.dr-footer .dr-logo{ font-size:13px; }
-@media(max-width:600px){ .dr-footer{ flex-direction:column; gap:10px; text-align:center; } }
+.dr-footer{ border-top:1px solid var(--dr-line); padding:56px 0 24px; font-family:var(--dr-sans); font-size:13px; color:var(--dr-text-faint); }
+.dr-footer-grid{ display:grid; grid-template-columns:1.6fr 1fr 1fr; gap:40px; padding-bottom:36px; }
+.dr-footer .dr-logo{ font-family:var(--dr-mono); font-style:italic; font-size:14px; color:var(--dr-text); margin-bottom:10px; }
+.dr-footer-brand{ max-width:360px; }
+.dr-footer-brand p{ line-height:1.65; margin-bottom:18px; }
+.dr-footer-social{ display:flex; gap:14px; }
+.dr-footer-social a{ width:32px; height:32px; border-radius:8px; border:1px solid var(--dr-line); display:flex; align-items:center; justify-content:center; color:var(--dr-text-dim); transition:all 0.15s; }
+.dr-footer-social a:hover{ color:var(--dr-cyan); border-color:var(--dr-cyan-dim); }
+.dr-footer-heading{ font-family:var(--dr-mono); font-style:italic; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--dr-text-faint); margin-bottom:14px; }
+.dr-footer-col{ display:flex; flex-direction:column; gap:10px; }
+.dr-footer-col a{ color:var(--dr-text-dim); cursor:pointer; transition:color 0.15s; width:fit-content; }
+.dr-footer-col a:hover{ color:var(--dr-cyan); }
+.dr-footer-bottom{ display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; padding-top:20px; border-top:1px solid var(--dr-line); font-family:var(--dr-mono); font-style:italic; font-size:11px; }
+@media(max-width:800px){ .dr-footer-grid{ grid-template-columns:1fr; gap:28px; } }
 `;

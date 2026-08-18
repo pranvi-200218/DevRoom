@@ -111,7 +111,7 @@ export function useAIChat(projectId, room) {
     );
 
     const term = searchTerm.trim().toLowerCase();
-    const filteredMessages = term ? messages.filter((m) => m.content ? .toLowerCase().includes(term)) : messages;
+    const filteredMessages = term ? messages.filter((m) => m.content?.toLowerCase().includes(term)) : messages;
     const pinnedMessages = messages.filter((m) => m.pinned);
 
     return {

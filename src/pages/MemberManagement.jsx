@@ -11,6 +11,7 @@ import { useProfiles } from "../hooks/useProfiles";
 import { relativeTime } from "../lib/format";
 import NotificationBell from "../components/NotificationBell";
 import { mi } from "../lib/icons";
+import Loader from "../components/Loader";
 
 const ROLES = ["Owner", "Editor", "Viewer"];
 
@@ -313,7 +314,7 @@ export default function MemberManagement() {
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
 {loading && (
-  <tr><td colSpan={3} className="px-6 py-8 text-center text-on-surface-variant text-sm">Loading members…</td></tr>
+  <tr><td colSpan={3} className="px-6 py-8 text-center"><Loader label="loading_members..." /></td></tr>
 )}
 {!loading && error && (
   <tr><td colSpan={3} className="px-6 py-8 text-center text-error text-sm">{error}</td></tr>

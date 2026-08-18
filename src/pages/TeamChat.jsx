@@ -8,6 +8,7 @@ import { useProject } from "../hooks/useProjects";
 import { useUser } from "../context/UserContext";
 import { relativeTime } from "../lib/format";
 import { mi } from "../lib/icons";
+import Loader from "../components/Loader";
 
 const CHANNEL = "general";
 const QUICK_EMOJIS = [
@@ -163,11 +164,8 @@ export default function TeamChat() {
     {/* Sidebar Navigation */}
     <aside className="gsap-sidebar w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 z-50">
         <div className="mb-8 px-2 flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                <i className={`${mi("terminal")} text-on-primary text-xl`} />
-            </div>
             <div className="flex flex-col">
-                <h1 className="font-headline-md text-headline-md font-bold text-primary leading-none">DevRoom OS</h1>
+                <h1 className="font-headline-md text-headline-md font-bold text-primary leading-none">DevRoom</h1>
                 <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Engineering Workspace</span>
             </div>
         </div>
@@ -252,7 +250,7 @@ export default function TeamChat() {
         <section className="flex flex-1 overflow-hidden">
             {/* Message List */}
             <div ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto pt-6 px-gutter bg-surface custom-scrollbar">
-                {loading && <p className="text-sm text-on-surface-variant text-center">Loading messages…</p>}
+                {loading && <div className="flex justify-center py-4"><Loader label="loading_messages..." /></div>}
                 {!loading && error && <p className="text-sm text-error text-center">{error}</p>}
                 {!loading && !error && visibleMessages.length === 0 && (
                   <p className="text-sm text-on-surface-variant text-center">
