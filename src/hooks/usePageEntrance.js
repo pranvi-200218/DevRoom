@@ -21,17 +21,17 @@ export default function usePageEntrance(deps = []) {
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
         const ctx = gsap.context(() => {
             const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-            tl.fromTo(".gsap-topbar", { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.45 })
-                .fromTo(".gsap-sidebar", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5 }, "<")
+            tl.fromTo(".gsap-topbar", { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.45, clearProps: "transform" })
+                .fromTo(".gsap-sidebar", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, clearProps: "transform" }, "<")
                 .fromTo(
-                    ".gsap-panel", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08 },
+                    ".gsap-panel", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, clearProps: "transform" },
                     "-=0.25"
                 );
 
             gsap.utils.toArray(".gsap-stagger").forEach((group) => {
                 const children = group.children.length ? group.children : [group];
                 gsap.fromTo(
-                    children, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.045, ease: "power2.out", delay: 0.1 }
+                    children, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.045, ease: "power2.out", delay: 0.1, clearProps: "transform" }
                 );
             });
         });

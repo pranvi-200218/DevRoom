@@ -40,11 +40,15 @@ function PageTransition({ children }) {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!ref.current) return;
     if (reduced) {
-      gsap.set(ref.current, { opacity: 1, y: 0 });
+      gsap.set(ref.current, { opacity: 1 });
       return;
     }
     const ctx = gsap.context(() => {
-      gsap.fromTo(ref.current, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" });
+      gsap.fromTo(
+        ref.current,
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, duration: 0.35, ease: "power2.out", clearProps: "transform" }
+      );
     });
     return () => ctx.revert();
   }, [location.pathname]);

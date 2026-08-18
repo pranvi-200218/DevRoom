@@ -133,7 +133,7 @@ export default function ResourceVault() {
                 <span>AI Assistant</span>
             </div>
             <div className="cursor-pointer active:scale-95 duration-200 flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-medium rounded-lg font-body-sm text-body-sm">
-                <i className={`${mi("folder_open")}`} style={{fontVariationSettings: "'FILL' 1"}} />
+                <i className={`${mi("folder_open")}`} />
                 <span>Resources</span>
             </div>
         </nav>

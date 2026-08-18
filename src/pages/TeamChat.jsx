@@ -164,7 +164,7 @@ export default function TeamChat() {
     <aside className="gsap-sidebar w-sidebar-width h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 flex flex-col py-6 px-4 z-50">
         <div className="mb-8 px-2 flex items-center gap-3">
             <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                <i className={`${mi("terminal")} text-on-primary text-xl`} style={{fontVariationSettings: "'FILL' 1"}} />
+                <i className={`${mi("terminal")} text-on-primary text-xl`} />
             </div>
             <div className="flex flex-col">
                 <h1 className="font-headline-md text-headline-md font-bold text-primary leading-none">DevRoom OS</h1>
@@ -176,7 +176,7 @@ export default function TeamChat() {
                 <span className="text-[10px] font-bold text-outline uppercase tracking-widest">Main Modules</span>
             </div>
             <a className="flex items-center gap-3 px-3 py-2 bg-surface-container-highest text-primary font-medium rounded-lg cursor-pointer active:scale-95 duration-200 transition-colors">
-                <i className={`${mi("chat")} text-lg`} style={{fontVariationSettings: "'FILL' 1"}} />
+                <i className={`${mi("chat")} text-lg`} />
                 <span className="font-body-sm text-body-sm">Chat</span>
             </a>
             <a onClick={() => navigate(`/project/${projectId}/ai`)} className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 transition-colors rounded-lg cursor-pointer active:scale-95 duration-200">
@@ -222,7 +222,7 @@ export default function TeamChat() {
                   className={`flex items-center gap-2 transition-colors ${showPinnedOnly ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}
                   title={showPinnedOnly ? "Showing pinned only — click to show all" : "Show pinned messages only"}
                 >
-                    <i className={`${mi("push_pin")} text-sm`} style={showPinnedOnly ? { fontVariationSettings: "'FILL' 1" } : undefined} />
+                    <i className={`${mi("push_pin")} text-sm`} />
                     <span className="text-xs font-medium">{pinnedMessages.length} Pinned</span>
                 </button>
             </div>
@@ -271,14 +271,14 @@ export default function TeamChat() {
             <div className="flex items-baseline gap-2 mb-1">
                 <span className="font-bold text-sm">{msg.authorName}{isOwn ? " (you)" : ""}</span>
                 <span className="text-[10px] text-outline-variant">{relativeTime(msg.$createdAt)}</span>
-                {msg.pinned && <i className={`${mi("push_pin")} text-primary text-[14px]`} style={{fontVariationSettings: "'FILL' 1"}} />}
+                {msg.pinned && <i className={`${mi("push_pin")} text-primary text-[14px]`} />}
             </div>
             <div className="bg-surface-container/50 p-4 rounded-xl rounded-tl-none border border-outline-variant/10 message-gradient relative hover:border-outline-variant/30 transition-colors">
                 {msg.text && <p className="text-on-surface leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>}
                 {msg.attachmentFileId && (
                   <a href={getAttachmentUrl(msg.attachmentFileId)} target="_blank" rel="noreferrer" className="mt-3 bg-surface-container-lowest border border-outline-variant/20 rounded-lg p-3 flex items-center gap-3 max-w-sm hover:border-secondary/50 cursor-pointer transition-all">
                       <div className="w-10 h-10 bg-secondary/10 rounded flex items-center justify-center">
-                          <i className={`${mi("description")} text-secondary`} style={{fontVariationSettings: "'FILL' 1"}} />
+                          <i className={`${mi("description")} text-secondary`} />
                       </div>
                       <div className="flex flex-col overflow-hidden">
                           <span className="text-xs font-bold truncate">{msg.attachmentName}</span>
@@ -366,9 +366,9 @@ export default function TeamChat() {
         </section>
         {/* Message Input Bar */}
         <footer className="p-gutter pt-0 bg-surface">
-            <div className="max-w-4xl mx-auto glass-panel-chat border border-outline-variant/20 rounded-2xl overflow-hidden shadow-2xl relative">
+            <div className="max-w-4xl mx-auto glass-panel-chat border border-outline-variant/20 rounded-2xl shadow-2xl relative">
                 {/* Action Bar */}
-                <div className="px-4 py-2 flex items-center gap-2 border-b border-outline-variant/5 bg-surface-container-lowest/50">
+                <div className="px-4 py-2 flex items-center gap-2 border-b border-outline-variant/5 bg-surface-container-lowest/50 rounded-t-2xl">
                     <button onClick={() => wrapSelection("**")} title="Bold" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <i className={`${mi("format_bold")} text-lg`} />
 </button>
@@ -420,7 +420,7 @@ export default function TeamChat() {
                       onBlur={() => setTyping(false)}
                       className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1 resize-none h-10 max-h-32 font-body-sm leading-relaxed" placeholder={`Message #${CHANNEL}...`} rows="1"></textarea>
                     <button onClick={handleSend} disabled={sending} className="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center hover:shadow-[0_0_15px_rgba(138,235,255,0.4)] active:scale-95 transition-all disabled:opacity-50">
-<i className={`${mi("send")}`} style={{fontVariationSettings: "'FILL' 1"}} />
+<i className={`${mi("send")}`} />
 </button>
                 </div>
             </div>

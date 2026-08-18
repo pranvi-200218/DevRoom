@@ -27,6 +27,7 @@ const ICON_MAP = {
     download: "fa-solid fa-download",
     edit: "fa-solid fa-pen",
     error: "fa-solid fa-triangle-exclamation",
+    warning: "fa-solid fa-triangle-exclamation",
     folder: "fa-solid fa-folder",
     folder_managed: "fa-solid fa-folder-tree",
     folder_off: "fa-solid fa-folder-minus",
@@ -87,6 +88,7 @@ const ICON_MAP = {
     // notification-type icons (used by lib/notifications.js notificationIcon())
     manage_accounts: "fa-solid fa-user-gear",
     person_remove: "fa-solid fa-user-xmark",
+    how_to_reg: "fa-solid fa-user-check",
 };
 
 export function mi(name) {

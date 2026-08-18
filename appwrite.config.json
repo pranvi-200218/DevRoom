@@ -600,28 +600,69 @@
         }
     ],
     "buckets": [{
-        "$id": "6a507737000d9c310913",
-        "$permissions": [
-            "create(\"any\")",
-            "read(\"any\")",
-            "update(\"any\")",
-            "delete(\"any\")"
-        ],
-        "fileSecurity": false,
-        "name": "resources",
-        "enabled": true,
-        "maximumFileSize": 50000000,
-        "allowedFileExtensions": [
-            "jpg",
-            "pdf",
-            "png",
-            "html",
-            "mp4",
-            "gif",
-            "svg"
-        ],
-        "compression": "none",
-        "encryption": true,
-        "antivirus": true
-    }]
+            "$id": "6a507737000d9c310913",
+            "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "fileSecurity": false,
+            "name": "resources",
+            "enabled": true,
+            "maximumFileSize": 50000000,
+            "allowedFileExtensions": [
+                "jpg",
+                "pdf",
+                "png",
+                "html",
+                "mp4",
+                "gif",
+                "svg"
+            ],
+            "compression": "none",
+            "encryption": true,
+            "antivirus": true
+        },
+        {
+            "$id": "avatars",
+            "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "fileSecurity": false,
+            "name": "avatars",
+            "enabled": true,
+            "maximumFileSize": 5000000,
+            "allowedFileExtensions": [
+                "jpg",
+                "jpeg",
+                "png",
+                "webp",
+                "gif"
+            ],
+            "compression": "none",
+            "encryption": true,
+            "antivirus": true
+        },
+        {
+            "$id": "chat-attachments",
+            "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "fileSecurity": false,
+            "name": "chat-attachments",
+            "enabled": true,
+            "maximumFileSize": 50000000,
+            "allowedFileExtensions": [],
+            "compression": "none",
+            "encryption": true,
+            "antivirus": true
+        }
+    ]
 }

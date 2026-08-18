@@ -51,7 +51,6 @@ export function useAIChat(projectId, room) {
             setError(null);
             try {
                 const permissions = await getProjectPermissions(projectId);
-                console.log("PERMISSIONS DEBUG:", permissions);
                 const userDoc = await databases.createDocument(databaseId, aiMessagesCollectionId, ID.unique(), {
                     projectId,
                     room,
@@ -112,7 +111,7 @@ export function useAIChat(projectId, room) {
     );
 
     const term = searchTerm.trim().toLowerCase();
-    const filteredMessages = term ? messages.filter((m) => m.content && m.content.toLowerCase().includes(term)) : messages;
+    const filteredMessages = term ? messages.filter((m) => m.content ? .toLowerCase().includes(term)) : messages;
     const pinnedMessages = messages.filter((m) => m.pinned);
 
     return {
