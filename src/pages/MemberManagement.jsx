@@ -359,10 +359,6 @@ export default function MemberManagement() {
                         </div>
                         <div className="px-6 py-4 bg-white/5 border-t border-white/5 flex justify-between items-center text-[12px] text-on-surface-variant">
                             <span>Showing {filteredMembers.length} of {activeMembers.length} members</span>
-                            <div className="flex gap-2">
-                                <button className="px-3 py-1 rounded border border-white/10 transition-colors opacity-40 cursor-not-allowed" disabled title="Pagination isn't built yet — this shows everyone">Previous</button>
-                                <button className="px-3 py-1 rounded border border-white/10 transition-colors opacity-40 cursor-not-allowed" disabled title="Pagination isn't built yet — this shows everyone">Next</button>
-                            </div>
                         </div>
                     </div>
                 </div>

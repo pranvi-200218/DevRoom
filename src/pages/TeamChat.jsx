@@ -22,6 +22,32 @@ const QUICK_EMOJIS = [
   { emoji: "✅", icon: "fa-solid fa-circle-check" },
 ];
 const URL_REGEX = /(https?:\/\/[^\s]+)/gi;
+// Order matters: bold (**) and underline (__) checked before single _ / plain text.
+const FORMAT_REGEX = /(\*\*.+?\*\*|__.+?__|`.+?`|_.+?_)/g;
+
+function renderFormattedText(text) {
+  const parts = text.split(FORMAT_REGEX);
+  return parts.map((part, i) => {
+    if (!part) return null;
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("__") && part.endsWith("__")) {
+      return <u key={i}>{part.slice(2, -2)}</u>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code key={i} className="bg-surface-container-highest px-1.5 py-0.5 rounded text-[13px] font-mono">
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (part.startsWith("_") && part.endsWith("_")) {
+      return <em key={i}>{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+}
 
 export default function TeamChat() {
   const { projectId } = useParams();
@@ -272,7 +298,7 @@ export default function TeamChat() {
                 {msg.pinned && <i className={`${mi("push_pin")} text-primary text-[14px]`} />}
             </div>
             <div className="bg-surface-container/50 p-4 rounded-xl rounded-tl-none border border-outline-variant/10 message-gradient relative hover:border-outline-variant/30 transition-colors">
-                {msg.text && <p className="text-on-surface leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>}
+                {msg.text && <p className="text-on-surface leading-relaxed whitespace-pre-wrap break-words">{renderFormattedText(msg.text)}</p>}
                 {msg.attachmentFileId && (
                   <a href={getAttachmentUrl(msg.attachmentFileId)} target="_blank" rel="noreferrer" className="mt-3 bg-surface-container-lowest border border-outline-variant/20 rounded-lg p-3 flex items-center gap-3 max-w-sm hover:border-secondary/50 cursor-pointer transition-all">
                       <div className="w-10 h-10 bg-secondary/10 rounded flex items-center justify-center">
@@ -367,15 +393,16 @@ export default function TeamChat() {
             <div className="max-w-4xl mx-auto glass-panel-chat border border-outline-variant/20 rounded-2xl shadow-2xl relative">
                 {/* Action Bar */}
                 <div className="px-4 py-2 flex items-center gap-2 border-b border-outline-variant/5 bg-surface-container-lowest/50 rounded-t-2xl">
-                    {/* <button onClick={() => wrapSelection("**")} title="Bold" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
+                    <button onClick={() => wrapSelection("**")} title="Bold" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <i className={`${mi("format_bold")} text-lg`} />
 </button>
                     <button onClick={() => wrapSelection("_")} title="Italic" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <i className={`${mi("format_italic")} text-lg`} />
 </button>
+             
                     <button onClick={() => wrapSelection("`")} title="Code" className="p-1.5 text-on-surface-variant hover:text-primary transition-all rounded hover:bg-surface-variant/30">
 <i className={`${mi("code")} text-lg`} />
-</button> */}
+</button>
                     <div className="h-4 w-px bg-outline-variant/20 mx-1"></div>
                     <button onClick={() => fileInputRef.current?.click()} title="Attach file" className={`p-1.5 transition-all rounded hover:bg-surface-variant/30 ${attachment ? "text-primary" : "text-on-surface-variant hover:text-primary"}`}>
 <i className={`${mi("attach_file")} text-lg`} />
@@ -416,11 +443,19 @@ export default function TeamChat() {
                       onChange={(e) => handleDraftChange(e.target.value)}
                       onKeyDown={handleKeyDown}
                       onBlur={() => setTyping(false)}
-                      className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1 resize-none h-10 max-h-32 font-body-sm leading-relaxed" placeholder={`Message #${CHANNEL}...`} rows="1"></textarea>
+                      className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1 resize-none h-10 max-h-32 font-body-sm leading-relaxed"  rows="1"></textarea>
                     <button onClick={handleSend} disabled={sending} className="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center hover:shadow-[0_0_15px_rgba(138,235,255,0.4)] active:scale-95 transition-all disabled:opacity-50">
 <i className={`${mi("send")}`} />
 </button>
                 </div>
+                {draft.trim() && (
+                  <div className="px-4 pb-3 -mt-1 border-t border-outline-variant/5 pt-2">
+                    <span className="text-[9px] font-bold text-outline uppercase tracking-widest block mb-1">Preview</span>
+                    <p className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-wrap break-words">
+                      {renderFormattedText(draft)}
+                    </p>
+                  </div>
+                )}
             </div>
             <div className="text-center mt-3">
                 <span className="text-[10px] text-outline-variant font-mono"><b>Return</b> to send • <b>Shift+Return</b> for new line</span>

@@ -72,6 +72,11 @@ export function useMembers(projectId) {
     );
 
     const updateRole = useCallback(async(id, role) => {
+        // Owner row is synthesized (not a real doc) — there's nothing to update in the DB.
+        if (id.startsWith("owner-")) {
+            console.warn("The project owner's role can't be changed here.");
+            return null;
+        }
         const doc = await databases.updateDocument(databaseId, membersCollectionId, id, { role });
         setMembers((prev) => prev.map((m) => (m.$id === id ? doc : m)));
 
@@ -94,6 +99,11 @@ export function useMembers(projectId) {
     }, [projectId]);
 
     const removeMember = useCallback(async(id) => {
+        // Owner row is synthesized (not a real doc) — nothing to delete.
+        if (id.startsWith("owner-")) {
+            console.warn("The project owner can't be removed.");
+            return;
+        }
         const target = members.find((m) => m.$id === id);
         await databases.deleteDocument(databaseId, membersCollectionId, id);
         setMembers((prev) => prev.filter((m) => m.$id !== id));
@@ -132,8 +142,27 @@ export function useMembers(projectId) {
         return doc;
     }, [user.$id]);
 
-    const activeMembers = members.filter((m) => m.status === "active");
+    const activeFromDocs = members.filter((m) => m.status === "active");
     const pendingInvites = members.filter((m) => m.status === "pending");
+
+    // The project owner/creator never gets a row in the members collection —
+    // that only happens through the invite flow (pending -> active). Without
+    // this, the owner is invisible in "Active Members" even though they have
+    // full access to the project. Synthesize a row for them if one doesn't
+    // already exist so they show up in the list too.
+    const hasOwnerDoc = activeFromDocs.some((m) => m.userId === user.$id);
+    const activeMembers = hasOwnerDoc ?
+        activeFromDocs : [{
+                $id: `owner-${user.$id}`,
+                projectId,
+                userId: user.$id,
+                email: user.email,
+                name: user.name,
+                role: "Owner",
+                status: "active",
+            },
+            ...activeFromDocs,
+        ];
 
     return {
         members,

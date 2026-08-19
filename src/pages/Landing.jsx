@@ -157,7 +157,7 @@ export default function Landing() {
 
       const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
       tl.set(".dr-hero-title .dr-line span span", { yPercent: 120 })
-        .to(".dr-nav", { borderBottomColor: "rgba(255,255,255,0.07)", duration: 0.1 })
+        .to(".dr-nav", { borderColor: "rgba(255,255,255,0.12)", duration: 0.1 })
         .to(".dr-eyebrow", { opacity: 1, duration: 0.5 }, 0.1)
         .to(".dr-hero-title .dr-line span span", { yPercent: 0, duration: 1.1, stagger: 0.018 }, 0.25)
         .to(".dr-hero-sub", { opacity: 1, duration: 0.7 }, "-=0.5")
@@ -213,6 +213,14 @@ export default function Landing() {
         onEnter: () => gsap.to(".dr-arch-card", { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: "power3.out" }),
       });
 
+      // workflow cards stagger
+      gsap.set(".dr-flow-anim", { opacity: 0, y: 40 });
+      ScrollTrigger.create({
+        trigger: ".dr-flow-grid",
+        start: "top 85%",
+        onEnter: () => gsap.to(".dr-flow-anim", { opacity: 1, y: 0, duration: 0.75, stagger: 0.1, ease: "power3.out" }),
+      });
+
       // feed items stagger
       ScrollTrigger.create({
         trigger: ".dr-feed-list",
@@ -258,21 +266,28 @@ export default function Landing() {
       <div ref={dotRef} className="dr-cursor-dot" />
 
       {/* ---------- NAV ---------- */}
-      <nav className="dr-nav">
-        <div className="dr-logo">DevRoom</div>
-        <div className="dr-nav-links">
-          <a href="#features">Features</a>
-          <a href="#workflow">Workflow</a>
-          <a href="#stack">Tech Stack</a>
-          <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-github" /> Source</a>
-        </div>
-        <div className="dr-nav-right">
-          <button onClick={() => navigate("/dashboard")} className="dr-signin">Sign in</button>
-          <span className="dr-magnetic">
-            <button onClick={() => navigate("/dashboard")} className="dr-btn dr-btn-primary">Open Workspace</button>
-          </span>
-        </div>
-      </nav>
+      <div className="dr-nav-outer">
+        <nav className="dr-nav">
+          <div className="dr-logo">
+            DevRoom
+          </div>
+          <div className="dr-nav-links">
+            <a href="#features">Features</a>
+            <a href="#workflow">Workflow</a>
+            <a href="#stack">Tech Stack</a>
+            <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer">
+              <img className="dr-gh-favicon" src="https://github.githubassets.com/favicons/favicon.svg" alt="" />
+              Source
+            </a>
+          </div>
+          <div className="dr-nav-right">
+            <button onClick={() => navigate("/dashboard")} className="dr-signin">Sign in</button>
+            <span className="dr-magnetic">
+              <button onClick={() => navigate("/dashboard")} className="dr-btn dr-btn-primary">Open Workspace</button>
+            </span>
+          </div>
+        </nav>
+      </div>
 
       {/* ---------- HERO ---------- */}
       <header className="dr-hero">
@@ -289,16 +304,16 @@ export default function Landing() {
               chat, and an AI workspace, built on <b>Appwrite Teams</b> instead of brittle per-user ACLs.
             </p>
             <div className="dr-hero-cta dr-cta-row">
-              <span className="dr-magnetic">
+              {/* <div className="dr-magnetic">
                 <button onClick={() => navigate("/dashboard")} className="dr-btn dr-btn-primary dr-big">
                   Launch Workspace <i className="fa-solid fa-arrow-right" />
                 </button>
-              </span>
-              <span className="dr-magnetic">
+              </div> */}
+              <div className="dr-magnetic">
                 <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer" className="dr-btn dr-btn-ghost dr-big">
                   <i className="fa-brands fa-github" /> View source
                 </a>
-              </span>
+              </div>
             </div>
           </div>
 
@@ -318,7 +333,7 @@ export default function Landing() {
               </div>
             ) : (
               <img
-                src="/product-screenshot.png"
+                src="/product-screenshot.jpeg"
                 alt="DevRoom OS product screenshot"
                 className="dr-shot-img"
                 onError={() => setShotError(true)}
@@ -385,7 +400,7 @@ export default function Landing() {
           <h2 className="dr-reveal-up">From sign-in to shipped.</h2>
           <div className="dr-flow-grid">
             {STEPS.map((s, i) => (
-              <div className="dr-flow-card dr-reveal-up" key={s.n} style={{ transitionDelay: `${i * 0.06}s` }}>
+              <div className="dr-flow-card dr-flow-anim" key={s.n}>
                 <div className="dr-flow-num">{s.n}</div>
                 <h3>{s.title}</h3>
                 <p>{s.body}</p>
@@ -448,16 +463,14 @@ export default function Landing() {
               <h2 style={{ marginBottom: 16 }}>Every feature here is real code.</h2>
               <p>Open the live workspace or check the source — nothing on this page is a mockup.</p>
               <div className="dr-cta-row" style={{ opacity: 1 }}>
-                <span className="dr-magnetic">
-                  <button onClick={() => navigate("/dashboard")} className="dr-btn dr-btn-primary dr-big">
-                    Launch Workspace <i className="fa-solid fa-arrow-right" />
-                  </button>
-                </span>
-                <span className="dr-magnetic">
+                <div className="dr-magnetic" color="white">
+                 
+                </div>
+                <div className="dr-magnetic">
                   <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer" className="dr-btn dr-btn-ghost dr-big">
                     <i className="fa-brands fa-github" /> View Source
                   </a>
-                </span>
+                </div>
               </div>
               <div className="dr-cta-badges">
                 <span><i className="fa-solid fa-lock-open" /> Open source</span>
@@ -496,18 +509,18 @@ export default function Landing() {
             <div className="dr-footer-brand">
               <div className="dr-logo">DevRoom</div>
               <p>
-                Built solo by <b>Pranvi Srivastava</b> — B.Tech CSE, ABES Engineering College.
-                Frontend-focused, currently open to internships.
+                Designed &amp; built by <b>Pranvi</b>.<br />
+                Let's build something together.
               </p>
               <div className="dr-footer-social">
                 <a href="https://github.com/pranvi-200218" target="_blank" rel="noopener noreferrer" title="GitHub">
                   <i className="fa-brands fa-github" />
                 </a>
                 {/* Update with real profile URLs before sharing this link */}
-                <a href="#" target="_blank" rel="noopener noreferrer" title="LinkedIn">
+                <a href="https://www.linkedin.com/in/pranvisrivastava/" target="_blank" rel="noopener noreferrer" title="LinkedIn">
                   <i className="fa-brands fa-linkedin" />
                 </a>
-                <a href="#" target="_blank" rel="noopener noreferrer" title="Email">
+                <a href="mailto:pranvi651work@gmail.com" target="_blank" rel="noopener noreferrer" title="Email">
                   <i className="fa-solid fa-envelope" />
                 </a>
               </div>
@@ -524,9 +537,9 @@ export default function Landing() {
             <div className="dr-footer-col">
               <div className="dr-footer-heading">Connect</div>
               <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer">Source Code</a>
-              <a href="#">LinkedIn</a>
-              <a href="#">Resume</a>
-              <a onClick={() => navigate("/dashboard")}>Open Workspace</a>
+              <a href="https://www.linkedin.com/in/pranvisrivastava/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              {/* <a href="https://www.dropbox.com/scl/fi/your-resume-link?rlkey=your-key" target="_blank" rel="noopener noreferrer">Resume</a> */}
+              <a onClick={() => navigate("/dashboard")} color>Open Workspace</a>
             </div>
           </div>
 
@@ -545,16 +558,17 @@ const DR_STYLES = `
   --dr-bg:#06070a; --dr-bg-2:#0a0c11; --dr-panel:#0e1117; --dr-panel-2:#12161e;
   --dr-line:rgba(255,255,255,0.07); --dr-line-2:rgba(255,255,255,0.12);
   --dr-text:#e7e9ee; --dr-text-dim:#8b93a3; --dr-text-faint:#575f6e;
-  --dr-cyan:#5eead4; --dr-cyan-dim:rgba(94,234,212,0.14); --dr-violet:#a78bfa; --dr-amber:#fbbf6a;
+  --dr-cyan:#39ff88; --dr-cyan-dim:rgba(57,255,136,0.13); --dr-violet:#a78bfa; --dr-amber:#fbbf6a;
+  --dr-orange:#39ff88; --dr-orange-dim:rgba(57,255,136,0.13);
   --dr-mono:'JetBrains Mono', monospace; --dr-sans:'Geist', sans-serif;
   position:relative; background:
-    radial-gradient(1200px 600px at 15% -10%, rgba(94,234,212,0.05), transparent 60%),
+    radial-gradient(1200px 600px at 15% -10%, rgba(57,255,136,0.045), transparent 60%),
     radial-gradient(900px 500px at 90% 10%, rgba(167,139,250,0.04), transparent 55%),
     var(--dr-bg);
   color:var(--dr-text); font-family:var(--dr-sans); overflow-x:clip; cursor:default;
 }
 .dr-landing *{ box-sizing:border-box; }
-.dr-landing ::selection{ background:var(--dr-cyan); color:#04140f; }
+.dr-landing ::selection{ background:var(--dr-cyan); color:#04140b; }
 .dr-landing h1,.dr-landing h2,.dr-landing h3{ margin:0; }
 .dr-landing p{ margin:0; }
 .dr-landing button{ font:inherit; border:none; background:none; cursor:pointer; }
@@ -571,23 +585,29 @@ const DR_STYLES = `
 .dr-wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
 .dr-progress{ position:fixed; top:0; left:0; height:2px; width:100%; z-index:60; background:linear-gradient(90deg,var(--dr-cyan),var(--dr-violet)); transform-origin:left; transform:scaleX(0); }
 
-.dr-nav{ position:fixed; top:0; left:0; right:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
-  padding:20px 32px; backdrop-filter:blur(14px); background:rgba(6,7,10,0.55); border-bottom:1px solid transparent; }
-.dr-logo{ display:flex; align-items:center; gap:9px; font-family:var(--dr-mono); font-style:italic; font-weight:700; font-size:15px; letter-spacing:0.02em; }
+.dr-nav-outer{ position:fixed; top:18px; left:0; right:0; z-index:50; display:flex; justify-content:center; padding:0 20px; }
+.dr-nav{ width:100%; max-width:1180px; display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px 10px 14px; backdrop-filter:blur(16px); background:rgba(14,17,23,0.72);
+  border:1px solid var(--dr-line-2); border-radius:999px; box-shadow:0 12px 40px -12px rgba(0,0,0,0.55); }
+.dr-logo{ display:flex; align-items:center; gap:10px; font-family:var(--dr-mono); font-style:italic; font-weight:700; font-size:15px; letter-spacing:0.02em; }
+.dr-logo-icon{ width:32px; height:32px; border-radius:9px; border:1px solid rgba(94,234,212,0.35); background:var(--dr-cyan-dim);
+  display:flex; align-items:center; justify-content:center; color:var(--dr-cyan); font-size:14px; flex-shrink:0; }
 .dr-chev{ color:var(--dr-cyan); }
-.dr-nav-links{ display:flex; gap:34px; font-family:var(--dr-mono); font-style:italic; font-size:13px; color:var(--dr-text-dim); }
-.dr-nav-links a{ position:relative; transition:color .25s; }
+.dr-nav-links{ display:flex; align-items:center; gap:30px; font-family:var(--dr-mono); font-style:italic; font-size:13px; color:var(--dr-text-dim); }
+.dr-nav-links a{ position:relative; transition:color .25s; display:inline-flex; align-items:center; gap:6px; }
 .dr-nav-links a::after{ content:''; position:absolute; left:0; bottom:-6px; width:0; height:1px; background:var(--dr-cyan); transition:width .3s cubic-bezier(.65,0,.35,1); }
 .dr-nav-links a:hover{ color:var(--dr-text); }
 .dr-nav-links a:hover::after{ width:100%; }
-.dr-nav-right{ display:flex; align-items:center; gap:22px; }
+.dr-gh-favicon{ width:14px; height:14px; border-radius:50%; opacity:0.85; }
+.dr-nav-right{ display:flex; align-items:center; gap:18px; }
 .dr-signin{ font-family:var(--dr-mono); font-style:italic; font-size:13px; color:var(--dr-text-dim); }
-.dr-btn{ font-family:var(--dr-mono); font-style:italic; font-size:13px; font-weight:600; padding:10px 18px; border-radius:7px; display:inline-flex; align-items:center; gap:8px; }
-.dr-btn-primary{ background:var(--dr-cyan); color:#04140f; }
+.dr-btn{ font-family:var(--dr-mono); font-style:italic; font-size:13px; font-weight:600; padding:10px 18px; border-radius:999px; display:inline-flex; align-items:center; gap:8px; }
+.dr-btn-primary{ background:var(--dr-cyan); color:#04140b; }
 .dr-btn-ghost{ border:1px solid var(--dr-line-2); color:var(--dr-text); background:rgba(255,255,255,0.02); }
+.dr-hero .dr-btn, .dr-cta-left .dr-btn{ border-radius:9px; }
 @media(max-width:900px){ .dr-nav-links{ display:none; } }
 
-.dr-hero{ padding:170px 0 90px; position:relative; }
+.dr-hero{ padding:150px 0 90px; position:relative; }
 .dr-hero-grid{ display:grid; grid-template-columns:1.05fr 1fr; gap:60px; align-items:start; }
 @media(max-width:980px){ .dr-hero-grid{ grid-template-columns:1fr; } }
 .dr-eyebrow{ font-family:var(--dr-mono); font-style:italic; font-size:12.5px; color:var(--dr-cyan); letter-spacing:0.04em; display:flex; align-items:center; gap:10px; margin-bottom:26px; opacity:0; }
@@ -595,7 +615,7 @@ const DR_STYLES = `
 .dr-hero-title{ font-family:var(--dr-sans); font-weight:800; font-size:clamp(38px,5vw,60px); line-height:1.06; letter-spacing:-0.02em; margin-bottom:24px; }
 .dr-line{ display:block; overflow:hidden; }
 .dr-line span{ display:inline-block; will-change:transform; }
-.dr-highlight{ color:var(--dr-cyan); font-style:normal; }
+.dr-highlight{ color:var(--dr-orange); font-style:normal; }
 .dr-hero-sub{ font-size:16.5px; line-height:1.7; color:var(--dr-text-dim); max-width:480px; margin-bottom:34px; opacity:0; }
 .dr-hero-sub b{ color:var(--dr-text); font-weight:600; }
 .dr-cta-row{ display:flex; gap:14px; flex-wrap:wrap; }
