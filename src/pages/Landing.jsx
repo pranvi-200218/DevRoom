@@ -891,11 +891,6 @@ export default function Landing() {
 
             <div className="dr-live-actions dr-reveal-up">
               <div className="dr-magnetic">
-                <button onClick={() => navigate("/dashboard")} className="dr-btn dr-btn-primary dr-big">
-                  Launch Workspace <i className="fa-solid fa-arrow-right" />
-                </button>
-              </div>
-              <div className="dr-magnetic">
                 <a
                   href="https://github.com/pranvi-200218/DevRoom"
                   target="_blank"
@@ -956,10 +951,10 @@ export default function Landing() {
                   <i className="fa-brands fa-github" />
                 </a>
                 {/* Update with real profile URLs before sharing this link */}
-                <a href="#" target="_blank" rel="noopener noreferrer" title="LinkedIn">
+                <a href="https://www.linkedin.com/in/pranvisrivastava/" target="_blank" rel="noopener noreferrer" title="LinkedIn">
                   <i className="fa-brands fa-linkedin" />
                 </a>
-                <a href="#" target="_blank" rel="noopener noreferrer" title="Email">
+                <a href="mailto:pranvi651work@gmail.com" target="_blank" rel="noopener noreferrer" title="Email">
                   <i className="fa-solid fa-envelope" />
                 </a>
               </div>
@@ -976,15 +971,13 @@ export default function Landing() {
             <div className="dr-footer-col">
               <div className="dr-footer-heading">Connect</div>
               <a href="https://github.com/pranvi-200218/DevRoom" target="_blank" rel="noopener noreferrer">Source Code</a>
-              <a href="#">LinkedIn</a>
-              <a href="#">Resume</a>
+              <a href="https://www.linkedin.com/in/pranvisrivastava/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
               <a onClick={() => navigate("/dashboard")}>Open Workspace</a>
             </div>
           </div>
 
           <div className="dr-footer-bottom">
             <span>© 2026 DevRoom</span>
-            <span>Built with React, Appwrite &amp; GSAP</span>
           </div>
         </div>
       </footer>
