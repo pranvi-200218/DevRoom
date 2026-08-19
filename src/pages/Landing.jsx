@@ -863,11 +863,11 @@ export default function Landing() {
                 The goal was not just to make another collaboration interface, but to solve the real friction that
                 appears when a team is trying to build something quickly together.
               </p>
-              <div className="dr-why-tags">
+              {/* <div className="dr-why-tags">
                 <span><i className="fa-solid fa-code-branch" /> Built solo, no boilerplate</span>
                 <span><i className="fa-solid fa-bug" /> Real bugs, real fixes</span>
                 <span><i className="fa-solid fa-graduation-cap" /> B.Tech CSE, ABES</span>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -907,9 +907,9 @@ export default function Landing() {
               <span><i className="fa-solid fa-user" /> Built solo</span>
               <span><i className="fa-solid fa-bolt" /> Live, not staged</span>
             </div>
-            <div className="dr-live-proofline dr-reveal-up">
+            {/* <div className="dr-live-proofline dr-reveal-up">
               <span className="dr-live-proof-dot" /> This is a deployed product, not a concept page.
-            </div>
+            </div> */}
           </div>
 
           <div className="dr-live-window dr-reveal-up">
